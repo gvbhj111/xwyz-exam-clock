@@ -5,7 +5,7 @@
   onload="getLastCommit(document.getElementById('lastCommit'), 'L33Z22L11/ExamClock')"></script>
  */
 function getLastCommit(ele, repo) {
-  fetch(`https://api.github.com/repos/${repo}/commits?per_page=1`)
+  fetch(`https://api.github.com/repos/gvbhj111/xwyz-exam-clock/commits?per_page=1`)
     .then(response => response.json())
     .then(data => {
       ele.textContent = `${new Date(data[0].commit.committer.date).toLocaleString()}`
