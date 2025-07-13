@@ -214,6 +214,21 @@ exams[273] = {
   }
 };
 
+exams[276] = {
+  type: "高二 · 暑假",
+  author: "来源:（新）高二年级",
+  origin: "高二年级部",
+  mainSlogan: "以梦为马，不负韶华。",
+  rollSlogan: ["自立·自治·自觉·自动"],
+  schedule() {
+    $("早读", today.date, "08:00", "08:30");
+    $("第1节", today.date, "09:00", "10:00");
+    $("第2节", today.date, "10:20", "11:20");
+    $("第3节", today.date, "19:50", "20:50");
+    $("第4节", today.date, "21:00", "21:30");
+  }
+};
+      
 exams[301] = {
   type: "研究生",
   author: "whatever",
