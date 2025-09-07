@@ -194,8 +194,8 @@ exams[272] = {
 exams[273] = {
   type: "高二·周考",
   author: "来源:灵亡",
-  origin: "高一年级部",
-  mainSlogan: "以梦为马，不负韶华。",
+  origin: "高二年级部",
+  mainSlogan: "沉着冷静 诚信考试 ",
   rollSlogan: ["自立·自治·自觉·自动"],
   schedule() {
     $("数学", "2025-09-07", "17:50", "19:50");
