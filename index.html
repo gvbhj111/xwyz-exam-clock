@@ -2,6 +2,7 @@
 <html lang="zh-cmn">
 <!-- 纸鹿 GitHub: L33Z22L11/ExamClock -->
 
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -98,13 +99,14 @@
             </a>
             <div id="typelist" style="width:100%;">
               <a onclick="subject.switch(25)">高三·日常</a>
-              <a onclick="subject.switch(251)">高三·物理</a>
-              <a onclick="subject.switch(252)">高三·历史</a>
+              <a onclick="subject.switch(251)">高三</a>
               <a onclick="subject.switch(253)">高三·模考<span class="shield">每日循环</span></a>
-              <a onclick="subject.switch(261)">高二</a>
+              <a onclick="subject.switch(26)">高二·日常</a>
+              <a onclick="subject.switch(261)">高二·物理</a>
+              <a onclick="subject.switch(262)">高二·历史</a>
               <a onclick="subject.switch(27)">高一·日常</a>
-              <a onclick="subject.switch(272)">高一·寒假日常</a>
-              <a onclick="subject.switch(271)">高一</a>
+              <a onclick="subject.switch(271)">高一·物理</a>
+              <a onclick="subject.switch(272)">高一·历史</a>       
               <a onclick="setTemp()"><i class="fa-regular fa-square-plus"></i> 临时</a>
               <a onclick="setTimer()"><i class="fa-solid fa-stopwatch"></i> 倒计时</a>
             </div>
@@ -120,14 +122,14 @@
                 </div>
               </div>
               <div>
-                <p><i class="fa-brands fa-qq"></i> 投稿QQ: 2399052066</p>
+                <p><i class="fa-brands fa-qq"></i> 投稿QQ:3506828655 </p>
                 <p class="dim">遵照
                   <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>
                   协议使用作品。
                 </p>
               </div>
-              <a href="https://img.tg/album/54wL">
-                <i class="fa-solid fa-box-archive"></i> 一卷图库
+              <a href="https://img.tg/album/Oy7xg">
+                <i class="fa-solid fa-box-archive"></i> 一中图库
               </a>
             </div>
           </div>
@@ -141,12 +143,17 @@
               <a><i class="fa-solid fa-users"></i> 反馈交流QQ
                 <p class="dim">3506828655</p>
               </a>
-              <div><i class="fa-solid fa-flask"></i> 社会科目
+              <div><i class="fa-solid fa-flask"></i> 高二周测（理）
                 <div class="shieldlist">
-                  <a onclick="subject.switch(301)">研究生模拟</a>
+                  <a onclick="subject.switch(273)">高二周测（理）</a>
                 </div>
               </div>
-              <div><i class="fa-solid fa-gears"></i> 开发人员选项（暂未开放）
+              <div><i class="fa-solid fa-flask"></i> 学考模拟器
+                <div class="shieldlist">
+                  <a onclick="subject.switch(302)">学考模拟</a>
+                </div>
+              </div>
+              <div><i class="fa-solid fa-gears"></i> 开发人员选项
                 <div class="shieldlist">
                   <a onclick="sendFeatureRemoved('试图修改大标语时触发')">
                     <i class="fa-solid fa-quote-left"></i> 大标语</a>
@@ -157,6 +164,73 @@
                   <a href="?debug=1000"><i class="fa-solid fa-bug"></i> 调试</a>
                 </div>
               </div>
+
+              
+
+              <div><i class="fa-solid fa-file-import"></i> 本地导入
+                <div class="shieldlist">
+                  <a>
+                    <label style="display:block" onclick="event.stopPropagation()">
+                      导入 JSON/CSV
+                      <input type="file" accept=".json,.csv,text/csv,application/json" onchange="EC.importExamData(this.files?.[0])">
+                    </label>
+                    <p class="dim" style="padding:.3em 0 .2em 0">JSON: {"type":"名称","earlyAdmit":2,"mainSlogan":"","rollSlogan":[],"schedule":[{"name":"","date":"yyyy-mm-dd","start":"hh:mm","end":"hh:mm"}]}</p>
+                    <p class="dim">CSV: name,date,start,end（含表头，UTF-8）</p>
+                    <p class="dim" style="padding:.3em 0 .2em 0">
+                      <a href="./samples/exam-sample.json" download>下载示例 JSON</a> ·
+                      <a href="./samples/exam-sample.csv" download>下载示例 CSV</a>
+                    </p>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dropdown">
+            <a class="fa-solid fa-bell" data-sub="语音提醒"></a>
+            <div style="right:-2em;min-width:18em;">
+              <a>
+                <label style="display:flex;align-items:center;gap:.5em;cursor:pointer" onclick="event.stopPropagation()">
+                  <input id="audioToggle" type="checkbox" checked onchange="EC.toggleAudio(this.checked)">
+                  启用语音提醒
+                </label>
+              </a>
+              <a>
+                <label style="display:block" onclick="event.stopPropagation()">
+                  通用提示音（mp3/wav，作为各节点未设置时的回退）
+                  <input type="file" accept="audio/*" onchange="EC.setCustomAudio(this.files?.[0])">
+                </label>
+                <p class="dim" style="padding:.3em 0 .2em 0">未选择文件时使用默认蜂鸣音。</p>
+              </a>
+              <a onclick="EC.preview()" style="cursor:pointer">
+                <i class="fa-solid fa-play"></i> 预览提示音
+                <p class="dim">首次选择自定义音频后，需点击"预览提示音"完成一次播放确认，方可自动提醒。</p>
+              </a>
+              <div class="dim" style="padding:.3em 0 .2em 0">节点音频（各自上传，需各自预览解锁）：</div>
+              <a>
+                <label style="display:block" onclick="event.stopPropagation()">考前20分钟
+                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('pre20', this.files?.[0])">
+                </label>
+              </a>
+              <a onclick="EC.previewFor('pre20')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：考前20分钟</a>
+              <a>
+                <label style="display:block" onclick="event.stopPropagation()">考前10分钟
+                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('pre10', this.files?.[0])">
+                </label>
+              </a>
+              <a onclick="EC.previewFor('pre10')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：考前10分钟</a>
+              <a>
+                <label style="display:block" onclick="event.stopPropagation()">结束前15分钟
+                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('preend15', this.files?.[0])">
+                </label>
+              </a>
+              <a onclick="EC.previewFor('preend15')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：结束前15分钟</a>
+              <a>
+                <label style="display:block" onclick="event.stopPropagation()">考试结束
+                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('end', this.files?.[0])">
+                </label>
+              </a>
+              <a onclick="EC.previewFor('end')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：考试结束</a>
             </div>
           </div>
 
@@ -196,7 +270,7 @@
          
         </p>
         <p class="hilit"><i class="fa-solid fa-hashtag"></i>
-          欢迎小伙伴加我（3506828655），各考试/日常作息需要热心人士提供信息
+          欢迎小伙伴加群：1027191781，各考试/日常作息需要热心人士提供信息
         </p>
         <p class="hilit"><i class="fa-solid fa-hashtag"></i>
           背景图片目前用的是原作者学校图片，请谅解！欢迎大家多拍点好看的宣威一中图片，投稿加我说明来意。希望一中越来越好！
@@ -206,11 +280,16 @@
         <p><i class="fa-solid fa-award"></i>
           <span data-title="频道号：925gzg9yu8">一中频道</span>
           <span data-title="QQ：1746126569">一中万能墙</span>
+          <span data-title="xwyz-exam-clock.netlify.app">考试时钟</span>
       </div>
       <div class="space-between space">
         <p data-title="来自一卷图库，以CC BY-NC-SA 4.0方式使用">
           <i class="fa-solid fa-image"></i>
           <span id="bg">背景：雨后校园</span>
+           </p>
+        <p><a href="https://github.com/gvbhj111/xwyz-exam-clock"><i class="fa-brands fa-github"></i>
+            更新于 <span id="lastCommit">(获取中)</span></a>
+        </p>
         <p><i class="fa-solid fa-file-arrow-up"></i>
           V 7.3.6 恢复来源提醒
         </p>
@@ -221,7 +300,7 @@
   <script src="./js/exam.js" defer data-dependencies="clock"></script>
   <script src="./js/search.js" defer data-dependencies="clock"></script>
   <script src="./js/commit.js"
-    onload="getLastCommit(document.getElementById('lastCommit'), 'L33Z22L11/ExamClock')"></script>
+    onload="getLastCommit(document.getElementById('lastCommit'), 'gvbhj111/xwyz-exam-clock')"></script>
   <script src="./js/msg.js"></script>
   <script src="./js/interact.js" defer data-dependencies="msg"></script>
   <script src="./js/gallery.js" defer data-dependencies="msg,interact"></script>
