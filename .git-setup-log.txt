@@ -1,0 +1,26 @@
+== start ==
+TIME: 2025-10-01T16:55:20
+>> git config user.name "gvbhj111"
+ExitCode: 
+
+>> git config user.email "gvbhj2019@163.com"
+ExitCode: 
+
+Repo exists: .git found
+>> git add .
+ExitCode: 
+
+>> git commit -m "init"
+ExitCode: 
+
+>> git branch -M preview
+ExitCode: 
+
+>> git remote add origin git@github.com:gvbhj111/xwyz-exam-clock.git
+ExitCode: 
+
+>> git push -u origin preview
+ExitCode: 
+
+== done ==
+TIME: 2025-10-01T16:55:28
