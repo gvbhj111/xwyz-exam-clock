@@ -52,6 +52,18 @@ const EC = {
   beepBase: "./radio/",
   _beepCache: {},
   _previewApprovedMap: {},
+  // 预留音频文件命名格式（全部内置默认音频，统一为 .mp3）
+  defaultReminders: {
+    pre30: "pre30.mp3",
+    pre25: "pre25.mp3",
+    pre20: "pre20.mp3",
+    pre15: "pre15.mp3",
+    pre10: "pre10.mp3",
+    pre5:  "pre5.mp3",
+    start: "start.mp3",
+    preend15: "preend15.mp3",
+    end: "end.mp3"
+  },
   setCustomAudio(file) {
     if (!file) { this.clearCustomAudio(); return; }
     if (this.customAudioURL) URL.revokeObjectURL(this.customAudioURL);
@@ -140,6 +152,12 @@ const EC = {
   },
   play(kind) {
     if (!this.enabled) return;
+    // 白名单控制：若启用则依据 VoiceReminder.whitelist
+    if (window.VoiceReminder && window.VoiceReminder.enforceWhitelist) {
+      const list = window.VoiceReminder.whitelist || [];
+      if (!list.includes(String(subject.current))) return;
+    }
+
     // 如已选择自定义音频但未预览确认，不播放任何声音
     if (this.customAudioURL && !this._previewApproved) return;
     // 优先使用自定义音频
@@ -186,6 +204,10 @@ const EC = {
   // 播放指定节点（节点音频优先→通用音频→蜂鸣），精简输出并保证失败回退到蜂鸣
   playNode(key) {
     if (!this.enabled) return;
+    // 依据提醒配置开关过滤未启用的节点
+    try {
+      if (window.VoiceReminder && window.VoiceReminder.settings && window.VoiceReminder.settings[key] === false) return;
+    } catch(_) {}
     const itm = this.customMap[key];
     if (itm?.audio) {
       if (!this._previewApprovedMap[key]) return;
@@ -280,15 +302,25 @@ const EC = {
 EC.profile = 'custom';
 EC.profiles = {
   custom: [
-    { key: 'pre20',   t: (s) => new Date(s.start - 20 * 60000) }, // 考前20分钟
-    { key: 'pre10',   t: (s) => new Date(s.start - 10 * 60000) }, // 考前10分钟
+    { key: 'pre30',    t: (s) => new Date(s.start - 30 * 60000) }, // 考前30分钟
+    { key: 'pre25',    t: (s) => new Date(s.start - 25 * 60000) }, // 考前25分钟
+    { key: 'pre20',    t: (s) => new Date(s.start - 20 * 60000) }, // 考前20分钟
+    { key: 'pre15',    t: (s) => new Date(s.start - 15 * 60000) }, // 考前15分钟
+    { key: 'pre10',    t: (s) => new Date(s.start - 10 * 60000) }, // 考前10分钟
+    { key: 'pre5',     t: (s) => new Date(s.start -  5 * 60000) }, // 考前5分钟
+    { key: 'start',    t: (s) => new Date(s.start) },              // 开始时
     { key: 'preend15', t: (s) => new Date(s.end -  15 * 60000) },  // 结束前15分钟
-    { key: 'end',     t: (s) => new Date(s.end) }                 // 结束
+    { key: 'end',      t: (s) => new Date(s.end) }                 // 结束
   ]
 };
 EC.toneOf = (key) => ({
+  pre30: 'admit',
+  pre25: 'admit',
   pre20: 'admit',
+  pre15: 'warn',
   pre10: 'warn',
+  pre5:  'warn',
+  start: 'start',
   preend15: 'warn',
   end: 'end'
 }[key] || 'warn');
@@ -411,7 +443,13 @@ timer.update = function () {
           if (t < subject.start) { this._fired[n.key] = true; continue; }
         }
         if (t && now >= t && !this._fired[n.key]) {
-          EC.playNode(n.key);
+          if (window.VoiceReminder && window.VoiceReminder.settings && window.VoiceReminder.settings[n.key] === false) { this._fired[n.key] = true; continue; }
+          // 检查语音提醒总开关和白名单
+          if (window.VoiceReminder && window.VoiceReminder.enabled && 
+              (!window.VoiceReminder.enforceWhitelist || window.VoiceReminder.isWhitelisted(subject.current))) {
+            console.log(`[VoiceReminder] 触发节点 ${n.key}`);
+            EC.playNode(n.key);
+          }
           this._fired[n.key] = true;
         }
       } catch (_) {}

@@ -119,6 +119,8 @@
               <div><i class="fa-solid fa-wand-magic-sparkles"></i> 选张背景
                 <div class="shieldlist" id="bgVolList">
                   <a onclick="playCover(bg())">全部</a>
+                  <a onclick="EC.openCustomBackgroundDialog()"><i class="fa-solid fa-upload"></i> 上传背景</a>
+                  <a onclick="EC.openURLBackgroundDialog()"><i class="fa-solid fa-link"></i> 输入URL</a>
                 </div>
               </div>
               <div>
@@ -188,49 +190,24 @@
 
           <div class="dropdown">
             <a class="fa-solid fa-bell" data-sub="语音提醒"></a>
-            <div style="right:-2em;min-width:18em;">
-              <a>
-                <label style="display:flex;align-items:center;gap:.5em;cursor:pointer" onclick="event.stopPropagation()">
-                  <input id="audioToggle" type="checkbox" checked onchange="EC.toggleAudio(this.checked)">
-                  启用语音提醒
-                </label>
-              </a>
-              <a>
-                <label style="display:block" onclick="event.stopPropagation()">
-                  通用提示音（mp3/wav，作为各节点未设置时的回退）
-                  <input type="file" accept="audio/*" onchange="EC.setCustomAudio(this.files?.[0])">
-                </label>
-                <p class="dim" style="padding:.3em 0 .2em 0">未选择文件时使用默认蜂鸣音。</p>
-              </a>
-              <a onclick="EC.preview()" style="cursor:pointer">
-                <i class="fa-solid fa-play"></i> 预览提示音
-                <p class="dim">首次选择自定义音频后，需点击"预览提示音"完成一次播放确认，方可自动提醒。</p>
-              </a>
-              <div class="dim" style="padding:.3em 0 .2em 0">节点音频（各自上传，需各自预览解锁）：</div>
-              <a>
-                <label style="display:block" onclick="event.stopPropagation()">考前20分钟
-                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('pre20', this.files?.[0])">
-                </label>
-              </a>
-              <a onclick="EC.previewFor('pre20')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：考前20分钟</a>
-              <a>
-                <label style="display:block" onclick="event.stopPropagation()">考前10分钟
-                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('pre10', this.files?.[0])">
-                </label>
-              </a>
-              <a onclick="EC.previewFor('pre10')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：考前10分钟</a>
-              <a>
-                <label style="display:block" onclick="event.stopPropagation()">结束前15分钟
-                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('preend15', this.files?.[0])">
-                </label>
-              </a>
-              <a onclick="EC.previewFor('preend15')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：结束前15分钟</a>
-              <a>
-                <label style="display:block" onclick="event.stopPropagation()">考试结束
-                  <input type="file" accept="audio/*" onchange="EC.setCustomAudioFor('end', this.files?.[0])">
-                </label>
-              </a>
-              <a onclick="EC.previewFor('end')" style="cursor:pointer"><i class="fa-solid fa-play"></i> 预览：考试结束</a>
+            <div style="right:-2em;min-width:22em;">
+              <div id="voice-reminder-container">
+                <!-- 动态生成的语音提醒控制模块 -->
+                <div style="padding: 0 10px;">
+                  <label style="display:block; margin-bottom: 10px;">
+                    启用语音提醒
+                    <input type="checkbox" id="voice-reminder-toggle" onchange="VoiceReminder.toggle(this.checked)">
+                  </label>
+                  <button onclick="window.open('voice-config.html', 'VoiceReminderConfig', 'width=600,height=500')"
+                    style="display:block; margin-bottom: 10px; padding: 8px 16px;">
+                    提醒配置
+                  </button>
+                  <button onclick="window.open('audio-config.html', 'AudioConfig', 'width=600,height=600')"
+                    style="display:block; padding: 8px 16px;">
+                    音频配置
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -291,7 +268,7 @@
             更新于 <span id="lastCommit">(获取中)</span></a>
         </p>
         <p><i class="fa-solid fa-file-arrow-up"></i>
-          V 7.3.6 恢复来源提醒
+          V 8.0.0 新增语音提醒和自定义背景等功能
         </p>
       </div>
     </footer>
