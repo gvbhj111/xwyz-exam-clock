@@ -595,22 +595,34 @@
       });
     });
     
-    // 音频预览功能
+    // 音频预览功能（当前窗口内播放，避免跨窗口用户手势丢失导致的自动播放限制）
     function previewAudio(key) {
       const input = document.getElementById(`${key}-upload`);
       const file = input && input.files && input.files[0];
+      let src = '';
       if (file) {
-        // 通过父页面接口预览并解锁自定义音频
-        try { if (window.opener && window.opener.EC) window.opener.EC.setCustomAudioFor(key, file); } catch(_){}
-        try { if (window.opener && window.opener.EC) window.opener.EC.previewFor(key); } catch(_){}
-        return;
+        src = URL.createObjectURL(file);
+      } else {
+        src = `./radio/${key}.mp3`;
       }
-      // 无文件则预览默认内置音频（./radio/{key}.mp3），通过父页面接口触发
-      try { if (window.opener && window.opener.EC) window.opener.EC.previewFor(key); }
-      catch (e) {
-        const audio = new Audio(`./radio/${key}.mp3`);
-        audio.play().catch(()=>{});
-      }
+      const audio = new Audio(src);
+      audio.currentTime = 0;
+      audio.play()
+        .then(() => {
+          // 试听成功后尽量同步父页面（不强制父页面二次播放）
+          try {
+            if (window.opener && window.opener.EC) {
+              if (file) window.opener.EC.setCustomAudioFor(key, file);
+              // 可选：通知父页面已完成试听
+              if (window.opener && window.opener.postMessage) {
+                window.opener.postMessage({ type: 'audioPreviewed', key }, '*');
+              }
+            }
+          } catch(_){}
+        })
+        .catch(() => {
+          // 静默处理失败（某些设备需再次点击）
+        });
     }
     
     // 保存配置
