@@ -1,5 +1,5 @@
 console.groupCollapsed("\n%c  %c考试时钟 ExamClock", "background:url('/gvbhj111/xwyz-exam-clock/edit/main/js/favicon.ico') no-repeat;padding:32px;", "font:bold 36px sans-serif;color:#3a9;");
-console.log("\n项目仓库：https://github.com/L33Z22L11/ExamClock\n野生技协群：894656456\n\n");
+console.log("\n项目仓库：https://github.com/L33Z22L11/ExamClock\n野生技协：894656456\n\n");
 console.groupEnd();
 /* 
  * 适用于宣威一中的考试科目列表
