@@ -184,6 +184,121 @@ footer {
   text-align: center;
 }
 
+/* 语音提醒卡片 */
+.voice-reminder-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.voice-reminder-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 1.1em;
+  color: #000;
+}
+
+.voice-reminder-header i {
+  font-size: 1.2em;
+  color: #ff9a3c;
+}
+
+.voice-reminder-switch {
+  margin: 12px 0;
+}
+
+.voice-reminder-switch label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.voice-reminder-switch input {
+  display: none;
+}
+
+.voice-reminder-switch .slider {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  transition: 0.4s;
+}
+
+.voice-reminder-switch .slider:before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  top: 2px;
+  left: 2px;
+  transition: 0.4s;
+}
+
+.voice-reminder-switch input:checked + .slider {
+  background: #ff9a3c;
+}
+
+.voice-reminder-switch input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.voice-reminder-label {
+  font-size: 0.9em;
+  color: #000;
+}
+
+.voice-reminder-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.voice-reminder-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #000;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.voice-reminder-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.voice-reminder-btn i {
+  font-size: 1.1em;
+}
+
+.voice-reminder-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.8em;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.voice-reminder-footer i {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 :hover .notify>div,
 :hover .bar,
 :hover .card>* {

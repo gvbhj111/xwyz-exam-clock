@@ -119,6 +119,8 @@
               <div><i class="fa-solid fa-wand-magic-sparkles"></i> 选张背景
                 <div class="shieldlist" id="bgVolList">
                   <a onclick="playCover(bg())">全部</a>
+                  <a onclick="EC.openCustomBackgroundDialog()"><i class="fa-solid fa-upload"></i> 上传背景</a>
+                  <a onclick="EC.openURLBackgroundDialog()"><i class="fa-solid fa-link"></i> 输入URL</a>
                 </div>
               </div>
               <div>
@@ -139,8 +141,8 @@
 
           <div class="dropdown">
             <a class="fa-solid fa-bars" data-sub="菜单"></a>
-            <div style="right:-2em;min-width:10em;">          
-              <a><i class="fa-solid fa-users"></i> 反馈交流QQ
+            <div style="right:-2em;min-width:10em;">            
+            <a><i class="fa-solid fa-users"></i> 反馈交流QQ
                 <p class="dim">3506828655</p>
               </a>
               <div><i class="fa-solid fa-flask"></i> 高二周测（理）
@@ -162,6 +164,49 @@
                   <a onclick="fixMinutes(subject.end,'结束时间')">
                     <i class="fa-solid fa-hourglass-end"></i> 结束时间</a>
                   <a href="?debug=1000"><i class="fa-solid fa-bug"></i> 调试</a>
+                  <a href="admin.html"><i class="fa-solid fa-user-shield"></i> 管理员入口</a>
+                </div>
+              </div>
+
+              
+
+              <div><i class="fa-solid fa-file-import"></i> 本地导入
+                <div class="shieldlist">
+                  <a>
+                    <label style="display:block" onclick="event.stopPropagation()">
+                      导入 JSON/CSV
+                      <input type="file" accept=".json,.csv,text/csv,application/json" onchange="EC.importExamData(this.files?.[0])">
+                    </label>
+                    <p class="dim" style="padding:.3em 0 .2em 0">JSON: {"type":"名称","earlyAdmit":2,"mainSlogan":"","rollSlogan":[],"schedule":[{"name":"","date":"yyyy-mm-dd","start":"hh:mm","end":"hh:mm"}]}</p>
+                    <p class="dim">CSV: name,date,start,end（含表头，UTF-8）</p>
+                    <p class="dim" style="padding:.3em 0 .2em 0">
+                      <a href="./samples/exam-sample.json" download>下载示例 JSON</a> ·
+                      <a href="./samples/exam-sample.csv" download>下载示例 CSV</a>
+                    </p>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dropdown">
+            <a class="fa-solid fa-bell" data-sub="语音提醒"></a>
+            <div style="right:-2em;min-width:22em;">
+              <div id="voice-reminder-container">
+                <!-- 动态生成的语音提醒控制模块 -->
+                <div style="padding: 0 10px;">
+                  <label style="display:block; margin-bottom: 10px;">
+                    启用语音提醒
+                    <input type="checkbox" id="voice-reminder-toggle" onchange="VoiceReminder.toggle(this.checked)">
+                  </label>
+                  <button onclick="window.open('voice-config.html', 'VoiceReminderConfig', 'width=600,height=500')"
+                    style="display:block; margin-bottom: 10px; padding: 8px 16px;">
+                    提醒配置
+                  </button>
+                  <button onclick="window.open('audio-config.html', 'AudioConfig', 'width=600,height=600')"
+                    style="display:block; padding: 8px 16px;">
+                    音频配置
+                  </button>
                 </div>
               </div>
             </div>
@@ -224,7 +269,7 @@
             更新于 <span id="lastCommit">(获取中)</span></a>
         </p>
         <p><i class="fa-solid fa-file-arrow-up"></i>
-          V 7.3.6 恢复来源提醒
+          V 8.0.0 新增语音提醒功能
         </p>
       </div>
     </footer>

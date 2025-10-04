@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-cmn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam 数据管理 - Admin</title>
+  <link rel="stylesheet" href="./css/admin.css">
+  <script src="https://captcha.gurl.eu.org/cap.min.js"></script>
+</head>
+<body>
+  <img id="adminLogo" src="./logo.png" alt="Logo">
+  <div id="loginPanel" class="panel">
+    <h2>管理员登录</h2>
+    <label>账号
+      <input type="text" id="adminUser" placeholder="账号">
+    </label>
+    <label>密码
+      <input type="password" id="adminPass" placeholder="密码">
+    </label>
+    <label>验证码
+      <input type="text" id="localCaptcha" placeholder="计算：1 + 2 = ?">
+    </label>
+    <button id="loginBtn">登录</button>
+    <p id="loginMsg" class="dim"></p>
+  </div>
+
+  <div id="adminPanel" class="panel" style="display:none;">
+    <h2>exam.js 数据管理</h2>
+    <div class="actions">
+      <button id="loadExam">加载当前 exam.js</button>
+      <button id="downloadExam">下载修改后的 exam.js</button>
+      <label style="margin-left:auto">或从本地选择 exam.js
+        <input type="file" id="examFile" accept=".js,application/javascript,text/plain" onchange="window.AdminLoadExamFromFile && AdminLoadExamFromFile(this.files?.[0])">
+      </label>
+    </div>
+    <textarea id="examEditor" spellcheck="false" placeholder="在此编辑 exam.js 原始内容"></textarea>
+
+    <h3>推送到 GitHub</h3>
+    <div class="grid">
+      <label>仓库所有者
+        <input type="text" id="ghOwner" placeholder="例如: L33Z22L11">
+      </label>
+      <label>仓库名
+        <input type="text" id="ghRepo" placeholder="例如: ExamClock">
+      </label>
+      <label>目标路径
+        <input type="text" id="ghPath" value="js/exam.js">
+      </label>
+      <label>分支
+        <input type="text" id="ghBranch" value="main">
+      </label>
+      <label>提交说明
+        <input type="text" id="ghMessage" value="chore(admin): update exam.js via admin">
+      </label>
+      <label>GitHub Token (PAT)
+        <input type="password" id="ghToken" value="cscscscs" placeholder="需要 repo 权限的个人访问令牌（不保存明文）">
+      </label>
+      <label>加密口令
+        <input type="password" id="ghPass" placeholder="用于加密/解密 Token 的口令（仅本机存储密文）">
+      </label>
+      <div class="actions">
+        <button id="saveEncryptedToken">保存加密Token</button>
+        <button id="decryptFillToken">解密填充Token</button>
+        <button id="togglePassVisibility">显示/隐藏口令</button>
+        <button id="toggleTokenVisibility">显示/隐藏Token</button>
+        <button id="importDemoToken">导入示例Token</button>
+        <button id="clearEncryptedToken">清除本机密文</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="pushGitHub">推送到 GitHub</button>
+      <p class="dim">注意：GitHub 不支持账号密码进行 API 写入，请使用 PAT Token。操作将向控制台输出过程与结果。</p>
+    </div>
+    <pre id="status" class="status"></pre>
+  </div>
+  <script src="./js/admin.js"></script>
+</body>
+</html>

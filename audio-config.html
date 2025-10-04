@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语音提醒配置</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2ecc71;
+      --accent-color: #9b59b6;
+      --text-color: #2c3e50;
+      --light-bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .container {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 1000px;
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .time-category {
+      margin-bottom: 30px;
+    }
+    
+    .category-title {
+      font-size: 1.5rem;
+      color: var(--text-color);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary-color);
+      font-weight: 600;
+    }
+    
+    .audio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 25px;
+      margin-top: 20px;
+    }
+    
+    .audio-card {
+      background: var(--light-bg);
+      border-radius: var(--border-radius);
+      padding: 25px;
+      transition: var(--transition);
+      border: 1px solid #e9ecef;
+    }
+    
+    .audio-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .audio-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .audio-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+    }
+    
+    .audio-icon i {
+      font-size: 1.5rem;
+      color: white;
+    }
+    
+    .audio-title {
+      font-size: 1.4rem;
+      color: var(--text-color);
+      font-weight: 600;
+    }
+    
+    .audio-desc {
+      color: #6c757d;
+      font-size: 0.95rem;
+      margin-top: 5px;
+    }
+    
+    .controls-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .file-input {
+      display: none;
+    }
+    
+    .custom-file-upload {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 1rem;
+      font-weight: 500;
+      min-width: 160px;
+    }
+    
+    .custom-file-upload:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+    }
+    
+    .custom-file-upload i {
+      margin-right: 8px;
+    }
+    
+    .preview-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      background: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 1rem;
+      font-weight: 500;
+      min-width: 120px;
+    }
+    
+    .preview-btn:hover {
+      background: #27ae60;
+      transform: translateY(-2px);
+    }
+    
+    .preview-btn i {
+      margin-right: 8px;
+    }
+    
+    .file-info {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      border-left: 4px solid var(--primary-color);
+    }
+    
+    .file-name {
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 5px;
+    }
+    
+    .file-size {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-top: 10px;
+    }
+    
+    .status-uploaded {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-empty {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #e9ecef;
+    }
+    
+    .save-btn {
+      padding: 15px 40px;
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+      .audio-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .controls-row {
+        flex-direction: column;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-bell"></i> 语音提醒配置</h1>
+      <p>为每个重要时刻设置专属提醒音频</p>
+    </div>
+    
+    <div class="content">
+      <!-- 考试开始前提醒 -->
+      <div class="time-category">
+        <h2 class="category-title">考试开始前提醒</h2>
+        <div class="audio-grid">
+          <!-- 考前30分钟提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div>
+                <div class="audio-title">考前30分钟提醒</div>
+                <div class="audio-desc">考试开始前30分钟提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="pre30-upload" accept="audio/*">
+              <label for="pre30-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('pre30')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="pre30-name">未选择文件</div>
+              <div class="file-size" id="pre30-size">-</div>
+              <div class="status-indicator status-empty" id="pre30-status">未上传</div>
+            </div>
+          </div>
+          
+          <!-- 考前25分钟提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-hourglass-start"></i>
+              </div>
+              <div>
+                <div class="audio-title">考前25分钟提醒</div>
+                <div class="audio-desc">考试开始前25分钟提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="pre25-upload" accept="audio/*">
+              <label for="pre25-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('pre25')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="pre25-name">未选择文件</div>
+              <div class="file-size" id="pre25-size">-</div>
+              <div class="status-indicator status-empty" id="pre25-status">未上传</div>
+            </div>
+          </div>
+          
+          <!-- 考前20分钟提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-hourglass-half"></i>
+              </div>
+              <div>
+                <div class="audio-title">考前20分钟提醒</div>
+                <div class="audio-desc">考试开始前20分钟提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="pre20-upload" accept="audio/*">
+              <label for="pre20-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('pre20')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="pre20-name">未选择文件</div>
+              <div class="file-size" id="pre20-size">-</div>
+              <div class="status-indicator status-empty" id="pre20-status">未上传</div>
+            </div>
+          </div>
+          
+          <!-- 考前15分钟提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-hourglass-half"></i>
+              </div>
+              <div>
+                <div class="audio-title">考前15分钟提醒</div>
+                <div class="audio-desc">考试开始前15分钟提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="pre15-upload" accept="audio/*">
+              <label for="pre15-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('pre15')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="pre15-name">未选择文件</div>
+              <div class="file-size" id="pre15-size">-</div>
+              <div class="status-indicator status-empty" id="pre15-status">未上传</div>
+            </div>
+          </div>
+          
+          <!-- 考前10分钟提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-exclamation-circle"></i>
+              </div>
+              <div>
+                <div class="audio-title">考前10分钟提醒</div>
+                <div class="audio-desc">最后准备阶段提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="pre10-upload" accept="audio/*">
+              <label for="pre10-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('pre10')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="pre10-name">未选择文件</div>
+              <div class="file-size" id="pre10-size">-</div>
+              <div class="status-indicator status-empty" id="pre10-status">未上传</div>
+            </div>
+          </div>
+          
+          <!-- 考前5分钟提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-hourglass-end"></i>
+              </div>
+              <div>
+                <div class="audio-title">考前5分钟提醒</div>
+                <div class="audio-desc">考试即将开始提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="pre5-upload" accept="audio/*">
+              <label for="pre5-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('pre5')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="pre5-name">未选择文件</div>
+              <div class="file-size" id="pre5-size">-</div>
+              <div class="status-indicator status-empty" id="pre5-status">未上传</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 考试过程中提醒 -->
+      <div class="time-category">
+        <h2 class="category-title">考试过程中提醒</h2>
+        <div class="audio-grid">
+          <!-- 考试开始提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-play-circle"></i>
+              </div>
+              <div>
+                <div class="audio-title">考试开始提醒</div>
+                <div class="audio-desc">考试正式开始提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="start-upload" accept="audio/*">
+              <label for="start-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('start')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="start-name">未选择文件</div>
+              <div class="file-size" id="start-size">-</div>
+              <div class="status-indicator status-empty" id="start-status">未上传</div>
+            </div>
+          </div>
+          
+          <!-- 结束前15分钟提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-hourglass-end"></i>
+              </div>
+              <div>
+                <div class="audio-title">结束前15分钟提醒</div>
+                <div class="audio-desc">考试结束前15分钟提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="preend15-upload" accept="audio/*">
+              <label for="preend15-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('preend15')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="preend15-name">未选择文件</div>
+              <div class="file-size" id="preend15-size">-</div>
+              <div class="status-indicator status-empty" id="preend15-status">未上传</div>
+            </div>
+          </div>
+          
+          <!-- 考试结束提醒 -->
+          <div class="audio-card">
+            <div class="audio-header">
+              <div class="audio-icon">
+                <i class="fas fa-flag-checkered"></i>
+              </div>
+              <div>
+                <div class="audio-title">考试结束提醒</div>
+                <div class="audio-desc">考试正式结束提醒</div>
+              </div>
+            </div>
+            
+            <div class="controls-row">
+              <input type="file" class="file-input" id="end-upload" accept="audio/*">
+              <label for="end-upload" class="custom-file-upload">
+                <i class="fas fa-upload"></i> 选择音频文件
+              </label>
+              <button class="preview-btn" onclick="previewAudio('end')">
+                <i class="fas fa-play"></i> 预览
+              </button>
+            </div>
+            
+            <div class="file-info">
+              <div class="file-name" id="end-name">未选择文件</div>
+              <div class="file-size" id="end-size">-</div>
+              <div class="status-indicator status-empty" id="end-status">未上传</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <button class="save-btn" onclick="saveConfig()">
+          <i class="fas fa-save"></i> 保存配置
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 文件上传处理
+    const fileInputs = [
+      'pre30-upload', 'pre25-upload', 'pre20-upload', 'pre15-upload', 'pre10-upload', 'pre5-upload',
+      'start-upload', 'preend15-upload', 'end-upload'
+    ];
+    
+    fileInputs.forEach(id => {
+      const input = document.getElementById(id);
+      const key = id.replace('-upload', '');
+      
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          // 验证文件类型
+          if (!file.type.startsWith('audio/')) {
+            alert('请选择音频文件！');
+            return;
+          }
+          
+          // 更新文件信息
+          document.getElementById(`${key}-name`).textContent = file.name;
+          document.getElementById(`${key}-size`).textContent = formatFileSize(file.size);
+          document.getElementById(`${key}-status`).textContent = '已上传';
+          document.getElementById(`${key}-status`).className = 'status-indicator status-uploaded';
+          
+          // 通过父页面接口注册自定义音频并保存（可选）
+          try { if (window.opener && window.opener.EC) window.opener.EC.setCustomAudioFor(key, file); } catch(_){}
+          // 保存到本地存储（仅记录文件名与大小，页面展示用）
+          saveToLocalStorage(key, file.name, file.size);
+        }
+      });
+    });
+    
+    // 音频预览功能
+    function previewAudio(key) {
+      const input = document.getElementById(`${key}-upload`);
+      const file = input && input.files && input.files[0];
+      if (file) {
+        // 通过父页面接口预览并解锁自定义音频
+        try { if (window.opener && window.opener.EC) window.opener.EC.setCustomAudioFor(key, file); } catch(_){}
+        try { if (window.opener && window.opener.EC) window.opener.EC.previewFor(key); } catch(_){}
+        return;
+      }
+      // 无文件则预览默认内置音频（./radio/{key}.mp3），通过父页面接口触发
+      try { if (window.opener && window.opener.EC) window.opener.EC.previewFor(key); }
+      catch (e) {
+        const audio = new Audio(`./radio/${key}.mp3`);
+        audio.play().catch(()=>{});
+      }
+    }
+    
+    // 保存配置
+    function saveConfig() {
+      const config = {};
+      fileInputs.forEach(id => {
+        const key = id.replace('-upload', '');
+        const input = document.getElementById(id);
+        if (input.files[0]) {
+          config[key] = {
+            name: input.files[0].name,
+            size: input.files[0].size
+          };
+        }
+      });
+      
+      localStorage.setItem('audioConfig', JSON.stringify(config));
+      alert('配置已保存！');
+    }
+    
+    // 工具函数：格式化文件大小
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // 工具函数：保存到本地存储
+    function saveToLocalStorage(key, name, size) {
+      let config = JSON.parse(localStorage.getItem('audioConfig') || '{}');
+      config[key] = { name, size };
+      localStorage.setItem('audioConfig', JSON.stringify(config));
+    }
+    
+    // 页面加载时恢复配置
+    window.addEventListener('load', () => {
+      const config = JSON.parse(localStorage.getItem('audioConfig') || '{}');
+      Object.keys(config).forEach(key => {
+        if (config[key].name) {
+          document.getElementById(`${key}-name`).textContent = config[key].name;
+          document.getElementById(`${key}-size`).textContent = formatFileSize(config[key].size);
+          document.getElementById(`${key}-status`).textContent = '已上传';
+          document.getElementById(`${key}-status`).className = 'status-indicator status-uploaded';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -21,6 +21,59 @@ const gallery = {
   Mar25: [["灵亡","运动会","5/04/03/O0186Y"],["灵亡","运动会","5/04/03/O016DU"],["灵亡","篮球赛","5/04/03/O01lSx"],["灵亡","大成殿","5/04/03/O01fAt"],["灵亡","运动会","5/04/03/O01YqX"],["灵亡","宣威夜","5/04/03/O0NBOt"],],        
 };
 
+// 自定义背景存储
+const customBackgrounds = {
+  userUploads: [],
+  userURLs: []
+};
+
+// 添加自定义背景
+function addCustomBackground(type, data) {
+  try {
+    const id = Date.now();
+    const item = { 
+      id, 
+      type, 
+      data: type === 'upload' 
+        ? { url: URL.createObjectURL(data.file) }
+        : { url: data.url }
+    };
+    
+    if (type === 'upload') {
+      if (!data.file) throw new Error('未提供有效文件');
+      customBackgrounds.userUploads.push(item);
+      console.log(`[Background] 已添加上传背景 #${id}`);
+    } else {
+      if (!data.url) throw new Error('未提供有效URL');
+      customBackgrounds.userURLs.push(item);
+      console.log(`[Background] 已添加URL背景 #${id}: ${data.url}`);
+    }
+    return id;
+  } catch (e) {
+    console.error('[Background] 添加自定义背景失败:', e);
+    return null;
+  }
+}
+
+// 移除自定义背景
+function removeCustomBackground(id) {
+  let removed = false;
+  
+  customBackgrounds.userUploads = customBackgrounds.userUploads.filter(bg => {
+    if (bg.id === id) {
+      URL.revokeObjectURL(bg.data.url);
+      removed = true;
+      return false;
+    }
+    return true;
+  });
+  
+  customBackgrounds.userURLs = customBackgrounds.userURLs.filter(bg => bg.id !== id);
+  
+  if (removed) console.log(`[Background] 已移除自定义背景 #${id}`);
+  return removed;
+}
+
 const galleryFlated = Object.entries(gallery).flatMap(([vol, picInfos]) =>
   picInfos.map(([author, name, shortURL]) => ({
     vol, author, name, url: `https://ooo.0x0.ooo/202${shortURL}.jpg`,
@@ -28,12 +81,42 @@ const galleryFlated = Object.entries(gallery).flatMap(([vol, picInfos]) =>
 )
 
 function bg(vol) {
-  bg.cur = getBg(vol);
+  try {
+    // 优先使用自定义背景
+    if (vol === 'custom') {
+      if (customBackgrounds.userUploads.length > 0) {
+        const randomIndex = Math.floor(Math.random() * customBackgrounds.userUploads.length);
+        bg.cur = customBackgrounds.userUploads[randomIndex].data;
+      } else {
+        console.warn('[Background] 没有可用的上传背景，使用默认背景');
+        bg.cur = getBg('default');
+      }
+    } else if (vol === 'custom-url') {
+      if (customBackgrounds.userURLs.length > 0) {
+        const randomIndex = Math.floor(Math.random() * customBackgrounds.userURLs.length);
+        bg.cur = customBackgrounds.userURLs[randomIndex].data;
+      } else {
+        console.warn('[Background] 没有可用的URL背景，使用默认背景');
+        bg.cur = getBg('default');
+      }
+    } else {
+      bg.cur = getBg(vol);
+    }
+  } catch (e) {
+    console.error('[Background] 设置背景失败:', e);
+    bg.cur = getBg('default');
+  }
+  
   // 重新设置换壁纸定时
   clearInterval(bg.interval);
   bg.interval = setInterval(bg, 2E6);
   document.body.style.backgroundImage = `url(${bg.cur.url})`;
-  return document.getElementById("bg").innerHTML = `背景: ${bg.cur.author} - ${bg.cur.name} (${bg.cur.vol})`;
+  
+  const displayText = vol.startsWith('custom') 
+    ? `自定义背景` 
+    : `背景: ${bg.cur.author} - ${bg.cur.name} (${bg.cur.vol})`;
+    
+  return document.getElementById("bg").innerHTML = displayText;
 }
 
 function getBg(vol) {

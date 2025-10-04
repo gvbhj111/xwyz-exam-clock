@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>语音提醒配置</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .config-container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .time-node {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+    .time-text {
+      font-size: 16px;
+      color: #333;
+    }
+    
+    /* 滑块开关样式 */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      border-radius: 24px;
+      transition: .4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      border-radius: 50%;
+      transition: .4s;
+    }
+    input:checked + .slider {
+      background-color: #1890ff;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .save-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #1890ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .save-btn:hover {
+      background-color: #40a9ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="config-container">
+    <h2>语音提醒配置</h2>
+    
+    <div class="time-node">
+      <span class="time-text">考前30分钟提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="pre30" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">考前25分钟提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="pre25" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">考前20分钟提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="pre20" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">考前15分钟提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="pre15" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">考前10分钟提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="pre10" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">考前5分钟提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="pre5" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">结束前15分钟提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="preend15" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">考试结束提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="end" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="time-node">
+      <span class="time-text">考试开始提醒</span>
+      <label class="switch">
+        <input type="checkbox" id="start" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <button class="save-btn" onclick="saveConfig()">保存配置</button>
+  </div>
+
+  <script>
+    function saveConfig() {
+      const config = {
+        pre30: document.getElementById('pre30').checked,
+        pre25: document.getElementById('pre25').checked,
+        pre20: document.getElementById('pre20').checked,
+        pre15: document.getElementById('pre15').checked,
+        pre10: document.getElementById('pre10').checked,
+        pre5: document.getElementById('pre5').checked,
+        preend15: document.getElementById('preend15').checked,
+        end: document.getElementById('end').checked,
+        start: document.getElementById('start').checked
+      };
+      
+      // 保存配置到本地存储，并通过 postMessage 通知父页面
+      try {
+        localStorage.setItem('voiceReminderSettings', JSON.stringify(config));
+        if (window.opener) {
+          try {
+            window.opener.postMessage({
+              type: 'VOICE_REMINDER_CONFIG_UPDATE',
+              config: config
+            }, '*');
+          } catch (e) { console.warn('发送消息失败', e); }
+        }
+      } catch (e) { console.warn('保存配置失败', e); }
+      
+      alert('配置已保存！');
+      
+      // 关闭窗口
+      setTimeout(() => {
+        window.close();
+      }, 1000);
+    }
+    
+    // 页面加载时读取保存的配置
+    window.addEventListener('load', () => {
+      // 先读本地 voiceReminderSettings，再回退到父页面设置
+      let config = null;
+      try {
+        const savedConfig = localStorage.getItem('voiceReminderSettings');
+        if (savedConfig) config = JSON.parse(savedConfig);
+        if (!config && window.opener && window.opener.VoiceReminder && window.opener.VoiceReminder.settings) {
+          config = window.opener.VoiceReminder.settings;
+        }
+      } catch (e) { console.warn('读取配置失败', e); }
+      if (config) {
+        Object.keys(config).forEach(key => {
+          const checkbox = document.getElementById(key);
+          if (checkbox) {
+            checkbox.checked = !!config[key];
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

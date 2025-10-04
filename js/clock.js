@@ -40,7 +40,295 @@ let slogan = {
 
 let timer = {
   // 这块也一样，有机会再写
+  _phase: "idle" // 相位跟踪，避免重复触发音频
 };
+
+/* 语音与导入：全局控制器 */
+const EC = {
+  enabled: true,
+  customAudioURL: null,
+  audioCtx: null,
+  customMap: {},
+  beepBase: "./radio/",
+  _beepCache: {},
+  _previewApprovedMap: {},
+  // 预留音频文件命名格式（全部内置默认音频，统一为 .mp3）
+  defaultReminders: {
+    pre30: "pre30.mp3",
+    pre25: "pre25.mp3",
+    pre20: "pre20.mp3",
+    pre15: "pre15.mp3",
+    pre10: "pre10.mp3",
+    pre5:  "pre5.mp3",
+    start: "start.mp3",
+    preend15: "preend15.mp3",
+    end: "end.mp3"
+  },
+  setCustomAudio(file) {
+    if (!file) { this.clearCustomAudio(); return; }
+    if (this.customAudioURL) URL.revokeObjectURL(this.customAudioURL);
+    this.customAudioURL = URL.createObjectURL(file);
+    // 预热创建 Audio 实例
+    this._audio = new Audio(this.customAudioURL);
+    // 首次导入自定义音频后，要求先预览确认
+    this._previewApproved = false;
+  },
+  clearCustomAudio() {
+    if (this.customAudioURL) URL.revokeObjectURL(this.customAudioURL);
+    this.customAudioURL = null;
+    this._audio = null;
+  },
+  toggleAudio(on) {
+    this.enabled = !!on;
+    if (this.enabled && !this.audioCtx) {
+      try {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.audioCtx.state === "suspended") this.audioCtx.resume().catch(()=>{});
+      } catch (e) { console.warn("AudioContext 初始化失败：", e); }
+    }
+  },
+  preview() {
+    // 仅用于手动预览并解锁后续自动播放
+    if (this.customAudioURL && this._audio) {
+      try {
+        this._audio.currentTime = 0;
+        this._audio.play().then(()=>{ this._previewApproved = true; }).catch(()=>{});
+      } catch (_) {}
+      return;
+    }
+    // 无自定义音频时预览蜂鸣音
+    this._previewApproved = true;
+    this._beep('start');
+  },
+  // 优先播放本地radio目录的默认音频，失败则回退到振荡器蜂鸣
+  _beep(kind){
+    const fileMap = { admit: "admit.mp3", start: "start.mp3", warn: "warn.mp3", end: "end.mp3" };
+    const base = this.beepBase || "./radio/";
+    const src = base + (fileMap[kind] || "warn.mp3");
+    try {
+      let a = this._beepCache[src];
+      if (!a) { a = new Audio(src); this._beepCache[src] = a; }
+      console.log(`[Audio] 播放文件: ${src}`);
+      a.currentTime = 0;
+      a.play().catch(()=>{ this._beepOsc(kind); });
+    } catch (_) { this._beepOsc(kind); }
+  },
+  _beepOsc(kind){
+    const freqMap = { admit: 660, start: 880, warn: 520, end: 440 };
+    const durMap = { admit: .15, start: .25, warn: .12, end: .2 };
+    try {
+      if (!this.audioCtx) this.toggleAudio(true);
+      const ctx = this.audioCtx;
+      if (!ctx) return;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = freqMap[kind] || 600;
+      const nowt = ctx.currentTime;
+      g.gain.setValueAtTime(0.0001, nowt);
+      g.gain.exponentialRampToValueAtTime(0.3, nowt + 0.02);
+      const dur = durMap[kind] || 0.15;
+      g.gain.exponentialRampToValueAtTime(0.0001, nowt + dur);
+      o.connect(g).connect(ctx.destination);
+      o.start(nowt);
+      o.stop(nowt + dur + 0.02);
+    } catch (_) {}
+  },
+  // 按节点键名优先播放 ./radio/{key}.mp3，不存在再按音色播放，最后回退到蜂鸣
+  _beepKey(key){
+    try {
+      const base = this.beepBase || "./radio/";
+      const src1 = base + key + ".mp3";
+      let a1 = this._beepCache[src1];
+      if (!a1) { a1 = new Audio(src1); this._beepCache[src1] = a1; }
+      console.log(`[Audio] 播放文件: ${src1}`);
+      a1.currentTime = 0;
+      a1.play().catch(()=>{
+        const kind = this.toneOf ? this.toneOf(key) : "warn";
+        this._beep(kind);
+      });
+    } catch (_) {
+      const kind = this.toneOf ? this.toneOf(key) : "warn";
+      this._beep(kind);
+    }
+  },
+  play(kind) {
+    if (!this.enabled) return;
+    // 白名单控制：若启用则依据 VoiceReminder.whitelist
+    if (window.VoiceReminder && window.VoiceReminder.enforceWhitelist) {
+      const list = window.VoiceReminder.whitelist || [];
+      if (!list.includes(String(subject.current))) return;
+    }
+
+    // 如已选择自定义音频但未预览确认，不播放任何声音
+    if (this.customAudioURL && !this._previewApproved) return;
+    // 优先使用自定义音频
+    if (this.customAudioURL && this._audio) {
+      try {
+        console.log(`[Audio] 播放自定义文件: ${this.customAudioURL}`);
+        this._audio.currentTime = 0;
+        this._audio.play().catch(()=>{});
+      } catch (_) {}
+      return;
+    }
+    // 退化为蜂鸣音
+    this._beep(kind);
+  },
+
+  // 为指定节点设置/清除自定义音频
+  setCustomAudioFor(key, file) {
+    if (!file) { this.clearCustomAudioFor(key); return; }
+    try { const old = this.customMap[key]; if (old?.url) URL.revokeObjectURL(old.url); } catch(_) {}
+    const url = URL.createObjectURL(file);
+    this.customMap[key] = { url, audio: new Audio(url) };
+    this._previewApprovedMap[key] = false;
+  },
+  clearCustomAudioFor(key) {
+    const cur = this.customMap[key];
+    try { if (cur?.url) URL.revokeObjectURL(cur.url); } catch(_) {}
+    delete this.customMap[key];
+    delete this._previewApprovedMap[key];
+  },
+  // 预览指定节点并单独解锁（精简日志并增加失败回退）
+  previewFor(key) {
+    const itm = this.customMap[key];
+    if (itm?.audio) {
+      try {
+        itm.audio.currentTime = 0;
+        itm.audio.play()
+          .then(() => { this._previewApprovedMap[key] = true; })
+          .catch(() => { this._previewApprovedMap[key] = false; this._beep(this.toneOf(key)); });
+      } catch (_) { this._beep(this.toneOf(key)); }
+      return;
+    }
+    this._previewApprovedMap[key] = true;
+    this._beepKey(key);
+  },
+  // 播放指定节点（节点音频优先→通用音频→蜂鸣），精简输出并保证失败回退到蜂鸣
+  playNode(key) {
+    if (!this.enabled) return;
+    // 依据提醒配置开关过滤未启用的节点
+    try {
+      if (window.VoiceReminder && window.VoiceReminder.settings && window.VoiceReminder.settings[key] === false) return;
+    } catch(_) {}
+    const itm = this.customMap[key];
+    if (itm?.audio) {
+      if (!this._previewApprovedMap[key]) return;
+      try {
+        console.log(`[Audio] 播放节点自定义文件: ${itm.url}`);
+        itm.audio.currentTime = 0;
+        itm.audio.play().catch(() => { this._beepKey(key); });
+      } catch (_) { this._beepKey(key); }
+      return;
+    }
+    if (this.customAudioURL && this._audio) {
+      if (!this._previewApproved) return;
+      try {
+        console.log(`[Audio] 播放自定义文件: ${this.customAudioURL}`);
+        this._audio.currentTime = 0;
+        this._audio.play().catch(() => { this._beepKey(key); });
+      } catch (_) { this._beepKey(key); }
+      return;
+    }
+    this._beepKey(key);
+  },
+
+  /* 导入考试数据：支持 JSON/CSV */
+  importExamData(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const text = String(reader.result || "");
+        let data;
+        if (file.type.includes("json") || file.name.toLowerCase().endsWith(".json")) {
+          data = JSON.parse(text);
+        } else {
+          data = EC._parseCSV(text);
+        }
+        const examKey = "local_" + Date.now();
+        const meta = {
+          type: data.type || "本地导入",
+          mainSlogan: data.mainSlogan,
+          rollSlogan: data.rollSlogan,
+          earlyAdmit: typeof data.earlyAdmit === "number" ? data.earlyAdmit : undefined
+        };
+        const items = Array.isArray(data.schedule) ? data.schedule : data; // CSV 解析返回数组
+        exams[examKey] = {
+          type: meta.type,
+          mainSlogan: meta.mainSlogan,
+          rollSlogan: meta.rollSlogan,
+          earlyAdmit: meta.earlyAdmit,
+          schedule() {
+            items.forEach(it => {
+              if (!it) return;
+              const name = it.name || it.subject || it.title || "科目";
+              const date = it.date || today.date;
+              const start = it.start || it.begin;
+              const end = it.end || it.finish;
+              if (start && end) $(name, date, start, end, meta.mainSlogan, meta.rollSlogan, meta.earlyAdmit);
+            });
+          }
+        };
+        // 动态追加入口
+        try {
+          const a = document.createElement("a");
+          a.textContent = meta.type + "（本地）";
+          a.onclick = () => subject.switch(examKey);
+          document.getElementById("typelist")?.appendChild(a);
+        } catch (_) {}
+        subject.switch(examKey);
+        send && send("已导入本地考试数据并切换：" + meta.type);
+      } catch (e) {
+        alert("导入失败：" + e);
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  },
+  _parseCSV(text) {
+    // 简单 CSV 解析：按行拆分，首行表头 name,date,start,end
+    const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    if (!lines.length) return [];
+    const header = lines[0].split(",").map(s=>s.trim());
+    const idx = (k)=>header.findIndex(h=>h.toLowerCase()===k);
+    const iname = idx("name"); const idate = idx("date"); const istart = idx("start"); const iend = idx("end");
+    return lines.slice(1).map(line=>{
+      const cells = line.split(",").map(s=>s.trim());
+      return {
+        name: cells[iname] || "科目",
+        date: cells[idate] || today.date,
+        start: cells[istart],
+        end: cells[iend]
+      };
+    }).filter(x=>x.start && x.end);
+  }
+};
+
+EC.profile = 'custom';
+EC.profiles = {
+  custom: [
+    { key: 'pre30',    t: (s) => new Date(s.start - 30 * 60000) }, // 考前30分钟
+    { key: 'pre25',    t: (s) => new Date(s.start - 25 * 60000) }, // 考前25分钟
+    { key: 'pre20',    t: (s) => new Date(s.start - 20 * 60000) }, // 考前20分钟
+    { key: 'pre15',    t: (s) => new Date(s.start - 15 * 60000) }, // 考前15分钟
+    { key: 'pre10',    t: (s) => new Date(s.start - 10 * 60000) }, // 考前10分钟
+    { key: 'pre5',     t: (s) => new Date(s.start -  5 * 60000) }, // 考前5分钟
+    { key: 'start',    t: (s) => new Date(s.start) },              // 开始时
+    { key: 'preend15', t: (s) => new Date(s.end -  15 * 60000) },  // 结束前15分钟
+    { key: 'end',      t: (s) => new Date(s.end) }                 // 结束
+  ]
+};
+EC.toneOf = (key) => ({
+  pre30: 'admit',
+  pre25: 'admit',
+  pre20: 'admit',
+  pre15: 'warn',
+  pre10: 'warn',
+  pre5:  'warn',
+  start: 'start',
+  preend15: 'warn',
+  end: 'end'
+}[key] || 'warn');
 
 subject.switch = function (type) {
   if (!(type in exams))
@@ -58,6 +346,11 @@ subject.switch = function (type) {
   exams[this.current].schedule();
   slogan.update();
   document.getElementById("type").innerHTML = exams[this.current].type;
+  // 重置语音提醒状态
+  timer._phase = "idle";
+  timer._fired = {};
+  // 切换类型时不播放任何音频，仅短时间屏蔽节点提醒
+  EC._suppressUntil = Date.now() + 10000;
 
   if (SP.debug == null) playCover();
   // document.getElementsByClassName("card")[0].style.filter = "blur(.5em)";
@@ -139,6 +432,34 @@ timer.update = function () {
     // document.getElementById("subject").innerHTML = subject.name;
     // document.getElementById("duration").innerHTML = subject.duration;
   }
+  // 高考标准节点触发（一次性）
+  const prof = EC.profiles && EC.profiles[EC.profile];
+  if (prof && subject.start instanceof Date && subject.end instanceof Date && subject.start > new Date(0)) {
+    this._fired = this._fired || {};
+    for (const n of prof) {
+      try {
+        const t = n.t(subject);
+        // 切换后短时间内屏蔽节点提醒
+        if (EC._suppressUntil && Date.now() < EC._suppressUntil) continue;
+        // 结束前15分钟：考试总时长不足15分钟，或节点早于开始时间，均不触发
+        if (n.key === 'preend15') {
+          if ((subject.end - subject.start) < 15 * 60000) { this._fired[n.key] = true; continue; }
+          if (t < subject.start) { this._fired[n.key] = true; continue; }
+        }
+        if (t && now >= t && !this._fired[n.key]) {
+          if (window.VoiceReminder && window.VoiceReminder.settings && window.VoiceReminder.settings[n.key] === false) { this._fired[n.key] = true; continue; }
+          // 检查语音提醒总开关和白名单
+          if (window.VoiceReminder && window.VoiceReminder.enabled && 
+              (!window.VoiceReminder.enforceWhitelist || window.VoiceReminder.isWhitelisted(subject.current))) {
+            console.log(`[VoiceReminder] 触发节点 ${n.key}`);
+            EC.playNode(n.key);
+          }
+          this._fired[n.key] = true;
+        }
+      } catch (_) {}
+    }
+  }
+
   if (now < (subject.start - subject.admit * 6E4 - 12E5)) {
     this.num = (subject.start - subject.admit * 6E4 - now) / 36E5;
     this.num = this.num.toFixed(this.num >= 10 ? 0 : 1);
