@@ -6,7 +6,7 @@ console.groupEnd();
  */
 
 let specialDate = {
-  cee25: parseInt((new Date(2026, 6, 7) - Date.now()) / 864E5),
+  cee25: parseInt((new Date(2026, 5, 8) - Date.now()) / 864E5),
 }
 
 exams["2022-05-14"] = {
@@ -47,7 +47,7 @@ exams[251] = {
   type: "高三",
   author: "来源:暂无",
   origin: "高三年级部",
-  rollSlogan: ["曲靖市第一次质量检测（暂无）：请以实际铃声为准。"],
+  rollSlogan: ["请添加右下角反馈群提交信息"],
   voiceReminder: true,
   schedule() {
     $("语文", "2024-12-20", "09:00", "11:30");
@@ -67,7 +67,7 @@ exams[253] = {
   type: "高三·模考",
   author: "",
   origin: "高三年级部",
-  rollSlogan: ["高三合格性模拟考试：请以实际铃声为准。"],
+  rollSlogan: ["请添加右下角反馈群提交信息"],
   voiceReminder: true,
   schedule() {
     $("数学", today.date, "07:30", "09:00");
@@ -166,7 +166,7 @@ exams[271] = {
   type: "高一·物理",
   author: "来源:高一年级",
   origin: "高一年级部",
-  rollSlogan: ["宣威市2025年高一春季学期教学质量期末监测：请以实际时间为准。"],
+  rollSlogan: ["宣请添加右下角反馈群提交信息"],
   voiceReminder: true,
   schedule() {
     $("语文", "2025-07-06", "09:00", "11:30");
@@ -182,7 +182,7 @@ exams[272] = {
   type: "高一 · 历史",
   author: "来源:高一年级",
   origin: "高一年级部",
-  rollSlogan: ["宣威市2025年高一春季学期教学质量期末监测：请以实际时间为准。"],
+  rollSlogan: ["请添加右下角反馈群提交信息"],
   voiceReminder: true,
   schedule() {
    $("语文", "2025-07-06", "09:00", "11:30");
