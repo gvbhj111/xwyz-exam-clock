@@ -6,7 +6,7 @@ console.groupEnd();
  */
 
 let specialDate = {
-  cee25: parseInt((new Date(2026, 6, 7) - Date.now()) / 864E5),
+  cee25: parseInt((new Date(2026, 5, 8) - Date.now()) / 864E5),
 }
 
 exams["2022-05-14"] = {
