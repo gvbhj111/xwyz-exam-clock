@@ -6,10 +6,10 @@ h2{margin:0 0 10px 0}
 h3{margin:10px 0}
 label{display:block;margin:10px 0}
 input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ccc;border-radius:8px}
-button{appearance:none;border:none;background:#3b82f6;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer}
+button{appearance:none;border:none;background:#3b82f6;color:#ffffff;padding:8px 14px;border-radius:8px;cursor:pointer}
 button:hover{background:#2563eb}
 .dim{color:#666;font-size:.9em}
 .actions{display:flex;gap:10px;align-items:center;margin:10px 0}
 textarea#examEditor{width:100%;min-height:360px;margin-top:10px;box-sizing:border-box;font-family:Consolas,Monaco,Menlo,monospace;border:1px solid #ccc;border-radius:8px;padding:10px}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.status{background:#0b1020;color:#b8e1ff;padding:12px;border-radius:8px;overflow:auto;max-height:220px}
+.status{background:#0b1020;color:#305d7d;padding:12px;border-radius:8px;overflow:auto;max-height:220px}
