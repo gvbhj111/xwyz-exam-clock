@@ -1,0 +1,15 @@
+body{font-family:system-ui,Segoe UI,Ubuntu,Arial,sans-serif;margin:0;background:#f7f7f9 url('../bj.jpg') no-repeat center center fixed;background-size:cover;color:#222}
+#adminLogo{position:static;display:block;width:350px;height:auto;margin:20px 0 6px 20px;object-fit:contain;border-radius:12px}
+.panel{max-width:960px;margin:0 auto 24px;padding:16px 20px;background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+
+h2{margin:0 0 10px 0}
+h3{margin:10px 0}
+label{display:block;margin:10px 0}
+input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ccc;border-radius:8px}
+button{appearance:none;border:none;background:#3b82f6;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer}
+button:hover{background:#2563eb}
+.dim{color:#666;font-size:.9em}
+.actions{display:flex;gap:10px;align-items:center;margin:10px 0}
+textarea#examEditor{width:100%;min-height:360px;margin-top:10px;box-sizing:border-box;font-family:Consolas,Monaco,Menlo,monospace;border:1px solid #ccc;border-radius:8px;padding:10px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.status{background:#0b1020;color:#b8e1ff;padding:12px;border-radius:8px;overflow:auto;max-height:220px}
