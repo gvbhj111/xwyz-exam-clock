@@ -160,13 +160,6 @@ exams[27] = {
   mainSlogan: "以梦为马，不负韶华。",
   rollSlogan: ["自立·自治·自觉·自动"],
   schedule() {
-   exams[26] = {
-  type: "高二日常",
-  author: "来源:灵亡",
-  origin: "高一年级部",
-  mainSlogan: "以梦为马，不负韶华。",
-  rollSlogan: ["自立·自治·自觉·自动"],
-   schedule() {
     $("早读", today.date, "07:20", "07:50");
     $("第1节", today.date, "08:00", "08:40");
     $("第2节", today.date, "08:50", "09:30");
@@ -186,6 +179,7 @@ exams[27] = {
     $("晚自习", today.date, "21:45", "22:30");
   }
 };
+
 exams[271] = {
   type: "高一·物理",
   author: "来源:高一年级",
