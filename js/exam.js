@@ -23,7 +23,7 @@ let specialDate = {
 
 exams["2022-05-14"] = {
   type: "临时考练",
-  mainSlogan: `${specialDate.cee25}天后 峰顶相会`,
+  mainSlogan: `距离高考${specialDate.gaokao}天`,
   schedule() {
     $("考练", today.date, "22:30", "23:30");
   }
@@ -33,7 +33,7 @@ exams[25] = {
   type: "高三·日常",
   author: "招募“高三·日常”维护者",
   origin: "高三年级部",
-  mainSlogan: `距离高考${specialDate.cee25}天`,
+  mainSlogan: `距离高考${specialDate.gaokao}天`,
   rollSlogan: ["以梦为马，不负韶华。冲刺高考，加油少年！"],
   earlyAdmit: 2,
   schedule() {
