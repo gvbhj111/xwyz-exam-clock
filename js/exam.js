@@ -5,9 +5,21 @@ console.groupEnd();
  * 适用于宣威一中的考试科目列表
  */
 
-let specialDate = {
-  cee25: parseInt((new Date(2026, 5, 7) - Date.now()) / 864E5),
+// --- 核心修改点 1：动态计算距离最近一次高考的天数 ---
+let now = new Date();
+let year = now.getFullYear();
+// 高考日期：6月7日 (JS中月份从0开始，所以5代表6月)
+let gaokaoDate = new Date(year, 5, 7); 
+
+// 如果今年的高考已经过了，就自动计算明年的高考
+if (now > gaokaoDate) {
+  gaokaoDate = new Date(year + 1, 5, 7);
 }
+
+let specialDate = {
+  // 使用 Math.ceil 向上取整，哪怕差0.5天也算1天，更符合倒计时直觉
+  gaokao: Math.ceil((gaokaoDate - now) / 86400000) 
+};
 
 exams["2022-05-14"] = {
   type: "临时考练",
