@@ -125,7 +125,7 @@ const VoiceReminder = {
     console.log(`[VoiceReminder] 当前考试类型: ${currentType || '未设置'}`);
     
     // 实际播放逻辑...
-    EC.playAudio(type);
+    EC.playNode(type);
   },
   
   // 更新设置并保存到localStorage
@@ -177,23 +177,23 @@ document.body.addEventListener('click', function() {
 
 // 音频系统控制台输出增强（包装原方法）
 try {
-  if (typeof EC !== 'undefined' && typeof EC.playAudio === 'function' && !EC.__wrappedPlayAudio) {
-    EC.__originalPlayAudio = EC.playAudio;
-    EC.playAudio = function(type) {
+  if (typeof EC !== 'undefined' && typeof EC.playNode === 'function' && !EC.__wrappedPlayNode) {
+    EC.__originalPlayNode = EC.playNode;
+    EC.playNode = function(type) {
       console.log(`[Audio] 请求播放: ${type}`);
       const t = subject && subject.current;
       console.log(`[Audio] 当前考试类型: ${t != null ? t : '未设置'}`);
       const ts = new Date().toLocaleString();
       console.log(`[Audio] 时间戳: ${ts}`);
       try {
-        const res = EC.__originalPlayAudio(type);
+        const res = EC.__originalPlayNode(type);
         console.log('[Audio] 播放指令已发送');
         return res;
       } catch (e) {
         console.error('[Audio] 播放失败:', e);
       }
     };
-    EC.__wrappedPlayAudio = true;
+    EC.__wrappedPlayNode = true;
   }
   if (typeof EC !== 'undefined' && typeof EC.toggleAudio === 'function' && !EC.__wrappedToggleAudio) {
     EC.__originalToggleAudio = EC.toggleAudio;
