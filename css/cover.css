@@ -41,7 +41,7 @@
     z-index: 2;
     transition: .2s;
     inset: 0;
-    background: #000 fixed center url("https://7.isyangs.cn/24/656ca7c42eb90-24.jpg");
+    background: #000 fixed center url("https://raw.githubusercontent.com/gvbhj111/xwyz-exam-clock/refs/heads/main/page_2.png") ;
     background-size: cover;
 }
 
@@ -130,7 +130,7 @@
 #coverImage {
     position: fixed;
     inset: 0 -5vw;
-    background: rgb(255 255 255 / 60%) center url("https://7.isyangs.cn/24/656ca7c42eb90-24.jpg");
+    background: rgb(255 255 255 / 60%) center url("https://raw.githubusercontent.com/gvbhj111/xwyz-exam-clock/refs/heads/main/page_2.png");
     background-size: cover;
 }
 
