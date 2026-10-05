@@ -23,25 +23,14 @@
 
 body {
   margin: 0;
-  background: var(--bg) fixed center;
+  background: var(--bg);
   color: var(--text);
   font-family: system-ui, "Segoe UI", Ubuntu, "Microsoft YaHei", Arial, sans-serif;
   font-size: 15px;
   line-height: 1.6;
 }
 
-/* 背景只保留极淡的渐变光晕，避免影响后台可读性 */
-body::before {
-  position: fixed;
-  z-index: -1;
-  inset: 0;
-  background:
-    radial-gradient(60em 40em at 8% -12%, rgb(122 174 255 / 14%), transparent 62%),
-    radial-gradient(52em 38em at 108% 6%, rgb(176 122 255 / 12%), transparent 62%),
-    radial-gradient(40em 30em at 50% 120%, rgb(74 222 128 / 8%), transparent 60%);
-  content: "";
-  pointer-events: none;
-}
+/* 后台不使用任何图片/渐变背景，纯深色底，专注数据编辑 */
 
 a {
   color: inherit;
