@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /js/admin.js
+Disallow: /js/admin-state.js
+Disallow: /js/admin-ui.js
+Disallow: /js/admin-util.js

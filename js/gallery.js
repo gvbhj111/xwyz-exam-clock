@@ -33,13 +33,19 @@ const galleryFlated = Object.entries(gallery).flatMap(([vol, picInfos]) =>
   }))
 )
 
+// 供 js/background.js 与后台管理读取（顶层 const 不会挂到 window 上）
+window.gallery = gallery;
+window.galleryFlated = galleryFlated;
+
 function bg(vol) {
   bg.cur = getBg(vol);
   // 重新设置换壁纸定时
   clearInterval(bg.interval);
   bg.interval = setInterval(bg, 2E6);
   document.body.style.backgroundImage = `url(${bg.cur.url})`;
-  return document.getElementById("bg").innerHTML = `背景: ${bg.cur.author} - ${bg.cur.name} (${bg.cur.vol})`;
+  const eleBg = document.getElementById("bg");
+  if (eleBg) eleBg.innerHTML = `背景: ${bg.cur.author} - ${bg.cur.name} (${bg.cur.vol})`;
+  return bg.cur;
 }
 
 function getBg(vol) {
@@ -52,6 +58,7 @@ function getBg(vol) {
 
 !function loadBgVolList() {
   const volList = document.getElementById("bgVolList");
+  if (!volList) return;   // 某些页面（如后台管理）不包含图库卷列表
   const volReversed = Object.keys(gallery).reverse();
   volReversed.forEach(volName => {
     const a = document.createElement("a");

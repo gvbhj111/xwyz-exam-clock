@@ -1,0 +1,46 @@
+# Netlify 部署配置（考试时钟）
+# ---------------------------------------------------------------
+# 本项目是纯静态站点：无需构建、无依赖、无后端。
+# Netlify 里导入本仓库后：
+#   构建命令（Build command）：留空
+#   发布目录（Publish directory）：.
+# 之后每次 push 到 main，Netlify 会自动同步部署。
+# ---------------------------------------------------------------
+
+[build]
+  publish = "."
+
+# 静态资源缓存：图片/字体缓存久一点，JS/JSON 保持新鲜，方便广播即时生效
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer-when-downgrade"
+    # 允许同源多窗口广播联动
+    Permissions-Policy = "microphone=(), camera=()"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# 管理页面不参与搜索收录
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

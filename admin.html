@@ -1,78 +1,629 @@
 <!DOCTYPE html>
 <html lang="zh-cmn">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exam 数据管理 - Admin</title>
-  <link rel="stylesheet" href="./css/admin.css">
-  <script src="https://captcha.gurl.eu.org/cap.min.js"></script>
+  <meta name="robots" content="noindex">
+  <title>考试时钟 · 管理控制台</title>
+  <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://lib.baomitu.com/font-awesome/6.5.1/css/all.min.css" media="none"
+    onload="this.media='all'">
+  <link rel="stylesheet" href="./css/admin.css?v=8.0.0">
 </head>
+
 <body>
-  <img id="adminLogo" src="./logo.png" alt="Logo">
-  <div id="loginPanel" class="panel">
-    <h2>管理员登录</h2>
-    <label>账号
-      <input type="text" id="adminUser" placeholder="账号">
-    </label>
-    <label>密码
-      <input type="password" id="adminPass" placeholder="密码">
-    </label>
-    <label>验证码
-      <input type="text" id="localCaptcha" placeholder="计算：1 + 2 = ?">
-    </label>
-    <button id="loginBtn">登录</button>
-    <p id="loginMsg" class="dim"></p>
-  </div>
-
-  <div id="adminPanel" class="panel" style="display:none;">
-    <h2>exam.js 数据管理</h2>
-    <div class="actions">
-      <button id="loadExam">加载当前 exam.js</button>
-      <button id="downloadExam">下载修改后的 exam.js</button>
-      <label style="margin-left:auto">或从本地选择 exam.js
-        <input type="file" id="examFile" accept=".js,application/javascript,text/plain" onchange="window.AdminLoadExamFromFile && AdminLoadExamFromFile(this.files?.[0])">
+  <!-- ============================ 登录 ============================ -->
+  <div id="loginPanel" class="loginWrap">
+    <div class="panel loginCard">
+      <img id="adminLogo" src="./logo.png" alt="Logo">
+      <h2><i class="fa-solid fa-shield-halved"></i> 考试时钟 · 管理控制台</h2>
+      <p class="dim">版本 8.0 · 背景轮播 / 考试广播 / 数据发布</p>
+      <label>账号
+        <input type="text" id="adminUser" placeholder="账号" autocomplete="username">
       </label>
-    </div>
-    <textarea id="examEditor" spellcheck="false" placeholder="在此编辑 exam.js 原始内容"></textarea>
-
-    <h3>推送到 GitHub</h3>
-    <div class="grid">
-      <label>仓库所有者
-        <input type="text" id="ghOwner" placeholder="例如: L33Z22L11">
+      <label>密码
+        <input type="password" id="adminPass" placeholder="密码" autocomplete="current-password">
       </label>
-      <label>仓库名
-        <input type="text" id="ghRepo" placeholder="例如: ExamClock">
-      </label>
-      <label>目标路径
-        <input type="text" id="ghPath" value="js/exam.js">
-      </label>
-      <label>分支
-        <input type="text" id="ghBranch" value="main">
-      </label>
-      <label>提交说明
-        <input type="text" id="ghMessage" value="chore(admin): update exam.js via admin">
-      </label>
-      <label>GitHub Token (PAT)
-        <input type="password" id="ghToken" value="" placeholder="需要 repo 权限的个人访问令牌（不保存明文）">
-      </label>
-      <label>加密口令
-        <input type="password" id="ghPass" placeholder="用于加密/解密 Token 的口令（仅本机存储密文）">
+      <label>验证码
+        <input type="text" id="localCaptcha" placeholder="计算：1 + 2 = ?" autocomplete="off">
       </label>
       <div class="actions">
-        <button id="saveEncryptedToken">保存加密Token</button>
-        <button id="decryptFillToken">解密填充Token</button>
-        <button id="togglePassVisibility">显示/隐藏口令</button>
-        <button id="toggleTokenVisibility">显示/隐藏Token</button>
-        <button id="importDemoToken">导入示例Token</button>
-        <button id="clearEncryptedToken">清除本机密文</button>
+        <button id="loginBtn" class="primary"><i class="fa-solid fa-right-to-bracket"></i> 登录</button>
+        <button id="captchaRefresh" class="ghost"><i class="fa-solid fa-rotate"></i> 换一题</button>
+      </div>
+      <p id="loginMsg" class="dim"></p>
+      <p class="dim tip">提示：登录状态仅保存在本机浏览器，不会上传到任何服务器。</p>
+    </div>
+  </div>
+
+  <!-- ============================ 控制台 ============================ -->
+  <div id="adminPanel" style="display:none;">
+    <header class="topbar">
+      <div class="brand">
+        <img src="./logo.png" alt="Logo">
+        <div>
+          <b>考试时钟 · 管理控制台</b>
+          <span class="dim">宣威一中 · 静态托管（GitHub Pages / Netlify）</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn ghost" href="./index.html" target="_blank"><i class="fa-solid fa-up-right-from-square"></i>
+          查看大屏</a>
+        <button id="logoutBtn" class="ghost"><i class="fa-solid fa-right-from-bracket"></i> 退出</button>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <a data-tab="dash"><i class="fa-solid fa-gauge-high"></i> 概览</a>
+      <a data-tab="bg"><i class="fa-regular fa-images"></i> 背景轮播</a>
+      <a data-tab="broadcast"><i class="fa-solid fa-bullhorn"></i> 广播发布</a>
+      <a data-tab="rules"><i class="fa-solid fa-clock"></i> 自动播报</a>
+      <a data-tab="exam"><i class="fa-solid fa-calendar-days"></i> 考试数据</a>
+      <a data-tab="theme"><i class="fa-solid fa-palette"></i> 站点外观</a>
+      <a data-tab="publish"><i class="fa-solid fa-cloud-arrow-up"></i> 发布</a>
+      <a data-tab="log"><i class="fa-solid fa-terminal"></i> 日志</a>
+    </nav>
+
+    <main>
+      <!-- ------------------------------ 概览 ------------------------------ -->
+      <section class="tabpane" data-pane="dash">
+        <div class="gridCards">
+          <div class="card stat">
+            <span class="dim">背景来源</span>
+            <b id="statSources">-</b>
+            <span class="dim" id="statBgCurrent">当前：-</span>
+          </div>
+          <div class="card stat">
+            <span class="dim">广播条数</span>
+            <b id="statMessages">-</b>
+            <span class="dim" id="statLastBroadcast">最近：-</span>
+          </div>
+          <div class="card stat">
+            <span class="dim">考试类型</span>
+            <b id="statExams">-</b>
+            <span class="dim" id="statExamTypes">-</span>
+          </div>
+          <div class="card stat">
+            <span class="dim">语音播报</span>
+            <b id="statVoice">-</b>
+            <span class="dim">浏览器合成语音</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-bolt"></i> 快捷操作</h3>
+          <div class="actions">
+            <button class="primary" id="quickPush"><i class="fa-solid fa-cloud-arrow-up"></i> 一键发布到 GitHub</button>
+            <button class="ghost" id="quickPushFeed"><i class="fa-solid fa-tower-broadcast"></i> 仅发布广播</button>
+            <a class="btn ghost" href="./index.html" target="_blank"><i class="fa-solid fa-tv"></i> 打开大屏预览</a>
+          </div>
+          <p class="dim">发布使用 GitHub Contents API，会把 <code>js/bg-data.js</code>、<code>js/broadcast-data.js</code>、<code>data/feed.json.js</code> 等文件提交到仓库，GitHub Pages / Netlify 会自动重新构建。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-circle-info"></i> 部署形态说明</h3>
+          <ul class="dim list">
+            <li>纯静态：无后端、无数据库，所有数据都是仓库里的 JS/JSON 文件。</li>
+            <li>广播实时下发：默认用同源多标签实时同步 + 静态文件；配置远程广播源（GitHub Contents API 地址）后全校大屏自动同步。</li>
+            <li>语音播报：使用浏览器内置 <code>speechSynthesis</code>，无需联网、无隐私上传。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ------------------------------ 背景 ------------------------------ -->
+      <section class="tabpane" data-pane="bg">
+        <div class="panel">
+          <h3><i class="fa-solid fa-sliders"></i> 轮播设置</h3>
+          <div class="grid">
+            <label>自动轮播
+              <select id="bgEnabled">
+                <option value="1">开启</option>
+                <option value="0">关闭</option>
+              </select>
+            </label>
+            <label>切换间隔（秒）
+              <input type="number" id="bgInterval" min="5" max="86400">
+            </label>
+            <label>轮播顺序
+              <select id="bgOrder">
+                <option value="random">随机</option>
+                <option value="sequence">顺序</option>
+              </select>
+            </label>
+            <label>过渡时长（毫秒）
+              <input type="number" id="bgTransitionMs" min="0" max="6000">
+            </label>
+            <label>画面效果
+              <select id="bgEffect">
+                <option value="none">原图</option>
+                <option value="blur">模糊</option>
+                <option value="gray">黑白</option>
+                <option value="warm">暖色</option>
+                <option value="cool">冷色</option>
+                <option value="dark">压暗</option>
+              </select>
+            </label>
+            <label>遮罩深度（0-90）
+              <input type="number" id="bgDarken" min="0" max="90">
+            </label>
+            <label>缓慢缩放（Ken Burns）
+              <select id="bgKenBurns">
+                <option value="1">开启</option>
+                <option value="0">关闭</option>
+              </select>
+            </label>
+            <label>页脚显示来源
+              <select id="bgShowCaption">
+                <option value="1">显示</option>
+                <option value="0">隐藏</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-layer-group"></i> 背景来源</h3>
+          <p class="dim">支持：内置图库、图床链接、必应每日壁纸、在线随机图、本地图片、渐变、纯色、动态视频、自定义 URL。权重越大被抽中的概率越高，权重 0 表示不参与轮播。</p>
+          <div class="tableWrap">
+            <table id="bgSourceTable">
+              <thead>
+                <tr>
+                  <th>启用</th>
+                  <th>名称</th>
+                  <th>类型</th>
+                  <th>条目</th>
+                  <th>权重</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="bgAddSource"><i class="fa-solid fa-plus"></i> 新增来源</button>
+            <button class="ghost" id="bgAddUrl"><i class="fa-solid fa-link"></i> 添加图片 URL</button>
+            <button class="ghost" id="bgAddLocal"><i class="fa-solid fa-folder-open"></i> 登记仓库图片</button>
+            <button class="ghost" id="bgPreview"><i class="fa-solid fa-eye"></i> 预览随机背景</button>
+            <button class="ghost" id="bgReset"><i class="fa-solid fa-rotate-left"></i> 恢复默认</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-list"></i> 当前来源明细</h3>
+          <div id="bgDetail" class="detail dim">点击上方"编辑"查看该来源的条目。</div>
+        </div>
+      </section>
+
+      <!-- ------------------------------ 广播发布 ------------------------------ -->
+      <section class="tabpane" data-pane="broadcast">
+        <div class="panel">
+          <h3><i class="fa-solid fa-bullhorn"></i> 发送广播</h3>
+          <div class="grid">
+            <label>级别
+              <select id="bcLevel">
+                <option value="info">提示（蓝色）</option>
+                <option value="notice" selected>通知（紫色）</option>
+                <option value="important">重要提醒（黄色）</option>
+                <option value="urgent">紧急广播（红色 + 闪烁）</option>
+              </select>
+            </label>
+            <label>失效时间（留空表示长期有效）
+              <input type="datetime-local" id="bcUntil">
+            </label>
+          </div>
+          <label>广播正文
+            <textarea id="bcText" rows="3" placeholder="例如：因设备检修，明日上午第一场考试推迟至 9:00 开始。"></textarea>
+          </label>
+          <label>语音朗读文本（留空则朗读正文）
+            <input type="text" id="bcVoice" placeholder="留空使用正文，可写成更适合朗读的口语">
+          </label>
+          <div class="actions">
+            <button class="primary" id="bcSend"><i class="fa-solid fa-paper-plane"></i> 立即广播</button>
+            <button class="ghost" id="bcTest"><i class="fa-solid fa-volume-high"></i> 本机试听</button>
+            <button class="ghost" id="bcTemplate"><i class="fa-solid fa-file-lines"></i> 常用模板</button>
+            <label class="inline"><input type="checkbox" id="bcPin"> 固定展示（不自动消失）</label>
+          </div>
+          <p class="dim">"立即广播"会：① 写入本机广播队列；② 同一浏览器所有已打开的页面实时收到；③ 勾选下面的"同步到远程"后推送/轮询远程广播源，实现全校大屏同步。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-tower-broadcast"></i> 远程广播源（可选，用于多屏同步）</h3>
+          <div class="grid">
+            <label>广播源地址（JSON 或 GitHub Contents API）
+              <input type="text" id="bcFeedUrl" placeholder="https://raw.githubusercontent.com/用户/仓库/main/data/feed.json">
+            </label>
+            <label>远程分支
+              <input type="text" id="bcFeedBranch" value="main">
+            </label>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="bcSaveFeed"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+            <button class="ghost" id="bcPull"><i class="fa-solid fa-download"></i> 拉取远程广播</button>
+            <button class="ghost" id="bcPush"><i class="fa-solid fa-cloud-arrow-up"></i> 推送广播到远程</button>
+          </div>
+          <p class="dim">推荐做法：把 <code>data/feed.json</code> 放在仓库里，广播源地址填 <code>https://api.github.com/repos/&lt;用户&gt;/&lt;仓库&gt;/contents/data/feed.json</code>，推送时会自动带上 Token（在"发布"页配置）。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-clock-rotate-left"></i> 广播记录</h3>
+          <div class="actions">
+            <button class="ghost" id="bcRefresh"><i class="fa-solid fa-rotate"></i> 刷新</button>
+            <button class="ghost" id="bcExport"><i class="fa-solid fa-file-export"></i> 导出 JSON</button>
+            <button class="ghost" id="bcClear"><i class="fa-solid fa-trash"></i> 清空本机广播</button>
+          </div>
+          <div class="tableWrap">
+            <table id="bcTable">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>级别</th>
+                  <th>内容</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------ 自动播报 ------------------------------ -->
+      <section class="tabpane" data-pane="rules">
+        <div class="panel">
+          <h3><i class="fa-solid fa-volume-high"></i> 语音设置</h3>
+          <div class="grid">
+            <label>总开关
+              <select id="brEnabled">
+                <option value="1">开启</option>
+                <option value="0">关闭</option>
+              </select>
+            </label>
+            <label>语音播报
+              <select id="brVoice">
+                <option value="1">开启</option>
+                <option value="0">关闭（仅文字横幅）</option>
+              </select>
+            </label>
+            <label>语速（0.5-2）
+              <input type="number" id="brRate" step="0.1" min="0.5" max="2">
+            </label>
+            <label>音调（0-2）
+              <input type="number" id="brPitch" step="0.1" min="0" max="2">
+            </label>
+            <label>音量（0-1）
+              <input type="number" id="brVolume" step="0.1" min="0" max="1">
+            </label>
+            <label>指定语音
+              <select id="brVoiceName">
+                <option value="">自动选择中文语音</option>
+              </select>
+            </label>
+            <label>播报前提示音
+              <select id="brChime">
+                <option value="1">开启</option>
+                <option value="0">关闭</option>
+              </select>
+            </label>
+            <label>横幅展示
+              <select id="brBanner">
+                <option value="1">开启</option>
+                <option value="0">关闭</option>
+              </select>
+            </label>
+            <label>系统通知
+              <select id="brNotify">
+                <option value="0">关闭</option>
+                <option value="1">开启（需浏览器授权）</option>
+              </select>
+            </label>
+            <label>远程轮询间隔（秒）
+              <input type="number" id="brPoll" min="5" max="600">
+            </label>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="brTestVoice"><i class="fa-solid fa-play"></i> 试听语音</button>
+            <button class="ghost" id="brTestAlert"><i class="fa-solid fa-bell"></i> 测试横幅 + 语音</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-stopwatch"></i> 考试节点自动播报</h3>
+          <div class="grid">
+            <label>启用
+              <select id="brExamEnabled">
+                <option value="1">开启</option>
+                <option value="0">关闭</option>
+              </select>
+            </label>
+            <label>开考前（分钟，逗号分隔）
+              <input type="text" id="brBeforeStart" placeholder="30,15,5">
+            </label>
+            <label>开考后提示（分钟，逗号分隔）
+              <input type="text" id="brAfterStart" placeholder="15,30">
+            </label>
+            <label>结束前（分钟，逗号分隔）
+              <input type="text" id="brBeforeEnd" placeholder="30,15,5,1">
+            </label>
+            <label>考试结束提醒
+              <select id="brAfterEnd">
+                <option value="1">播报</option>
+                <option value="0">不播报</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid">
+            <label>开考前文案
+              <input type="text" id="tplBeforeStart" placeholder="距离{subject}开考还有{minutes}分钟">
+            </label>
+            <label>开考文案
+              <input type="text" id="tplStart">
+            </label>
+            <label>开考后文案
+              <input type="text" id="tplAfterStart">
+            </label>
+            <label>结束前文案
+              <input type="text" id="tplBeforeEnd">
+            </label>
+            <label>结束文案
+              <input type="text" id="tplEnd">
+            </label>
+          </div>
+          <p class="dim">可用变量：<code>{subject}</code> 科目名、<code>{minutes}</code> 分钟数、<code>{time}</code> 时刻。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-clock"></i> 整点报时</h3>
+          <div class="grid">
+            <label>启用
+              <select id="clkEnabled">
+                <option value="0">关闭</option>
+                <option value="1">开启</option>
+              </select>
+            </label>
+            <label>报时分钟（逗号分隔）
+              <input type="text" id="clkMinutes" placeholder="0,30">
+            </label>
+            <label>仅在考试期间
+              <select id="clkOnlyExam">
+                <option value="1">是</option>
+                <option value="0">否</option>
+              </select>
+            </label>
+            <label>报时文案
+              <input type="text" id="clkTemplate" placeholder="现在时间是{time}。">
+            </label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-scale-balanced"></i> 考场纪律轮播</h3>
+          <div class="grid">
+            <label>启用
+              <select id="disEnabled">
+                <option value="0">关闭</option>
+                <option value="1">开启</option>
+              </select>
+            </label>
+            <label>间隔（分钟）
+              <input type="number" id="disEvery" min="1" max="180">
+            </label>
+            <label>仅在考试期间
+              <select id="disOnlyExam">
+                <option value="1">是</option>
+                <option value="0">否</option>
+              </select>
+            </label>
+          </div>
+          <label>纪律条目（每行一条）
+            <textarea id="disItems" rows="5"></textarea>
+          </label>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-clock-rotate-left"></i> 时间校准（可选）</h3>
+          <div class="grid">
+            <label>启用
+              <select id="tsEnabled">
+                <option value="0">关闭</option>
+                <option value="1">开启</option>
+              </select>
+            </label>
+            <label>时间接口
+              <input type="text" id="tsUrl" placeholder="https://worldtimeapi.org/api/timezone/Asia/Shanghai">
+            </label>
+            <label>字段名
+              <input type="text" id="tsField" placeholder="datetime">
+            </label>
+            <label>额外偏移（毫秒）
+              <input type="number" id="tsOffset">
+            </label>
+          </div>
+        </div>
+
+        <div class="actions stickyActions">
+          <button class="primary" id="brSave"><i class="fa-solid fa-floppy-disk"></i> 保存播报设置</button>
+        </div>
+      </section>
+
+      <!-- ------------------------------ 考试数据 ------------------------------ -->
+      <section class="tabpane" data-pane="exam">
+        <div class="panel">
+          <h3><i class="fa-solid fa-calendar-days"></i> 考试数据（exam.js）</h3>
+          <div class="actions">
+            <button class="ghost" id="loadExam"><i class="fa-solid fa-download"></i> 加载当前 exam.js</button>
+            <button class="ghost" id="formatExam"><i class="fa-solid fa-wand-magic-sparkles"></i> 简单格式化</button>
+            <button class="ghost" id="checkExam"><i class="fa-solid fa-circle-check"></i> 语法检查</button>
+            <button class="ghost" id="downloadExam"><i class="fa-solid fa-file-arrow-down"></i> 下载 exam.js</button>
+            <label class="inline">或选择本地文件
+              <input type="file" id="examFile" accept=".js,application/javascript,text/plain">
+            </label>
+          </div>
+          <textarea id="examEditor" spellcheck="false" placeholder="在此编辑 exam.js 原始内容"></textarea>
+          <p class="dim" id="examHint">语法检查会在本地沙箱里试运行一次，不会影响页面。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-list-check"></i> 考试类型一览</h3>
+          <div class="tableWrap">
+            <table id="examTable">
+              <thead>
+                <tr>
+                  <th>标识</th>
+                  <th>名称</th>
+                  <th>来源</th>
+                  <th>标语</th>
+                  <th>语音</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------ 站点外观 ------------------------------ -->
+      <section class="tabpane" data-pane="theme">
+        <div class="panel">
+          <h3><i class="fa-solid fa-palette"></i> 站点外观</h3>
+          <div class="grid">
+            <label>大标题
+              <input type="text" id="thSlogan" placeholder="考试时钟">
+            </label>
+            <label>副标题 / 学校
+              <input type="text" id="thSchool" placeholder="宣威一中">
+            </label>
+            <label>页脚版本说明
+              <input type="text" id="thVersion" placeholder="V 8.0.0 背景轮播 + 考试广播">
+            </label>
+            <label>主题色
+              <input type="color" id="thAccent" value="#7aaeff">
+            </label>
+            <label>背景遮罩深度（0-90）
+              <input type="number" id="thDarken" min="0" max="90">
+            </label>
+            <label>全屏提示
+              <input type="text" id="thTip" placeholder="按 F11 或点击右上角可全屏">
+            </label>
+          </div>
+          <div class="actions">
+            <button class="primary" id="thSave"><i class="fa-solid fa-floppy-disk"></i> 保存外观</button>
+            <button class="ghost" id="thReset"><i class="fa-solid fa-rotate-left"></i> 恢复默认</button>
+          </div>
+          <p class="dim">外观设置保存为 <code>js/site-data.js</code>，发布时会一起提交到仓库；未配置时使用 <code>index.html</code> 里的默认文案。</p>
+        </div>
+      </section>
+
+      <!-- ------------------------------ 发布 ------------------------------ -->
+      <section class="tabpane" data-pane="publish">
+        <div class="panel">
+          <h3><i class="fa-brands fa-github"></i> GitHub 仓库</h3>
+          <div class="grid">
+            <label>仓库所有者
+              <input type="text" id="ghOwner" placeholder="gvbhj111">
+            </label>
+            <label>仓库名
+              <input type="text" id="ghRepo" placeholder="xwyz-exam-clock">
+            </label>
+            <label>分支
+              <input type="text" id="ghBranch" value="main">
+            </label>
+            <label>提交说明模板
+              <input type="text" id="ghMessage" value="chore(admin): update exam clock data">
+            </label>
+          </div>
+          <div class="grid">
+            <label>GitHub Token (PAT)
+              <input type="password" id="ghToken" placeholder="需要 repo 权限，不保存明文">
+            </label>
+            <label>加密口令
+              <input type="password" id="ghPass" placeholder="用于本机加密存储 Token">
+            </label>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="saveEncryptedToken"><i class="fa-solid fa-lock"></i> 保存加密 Token</button>
+            <button class="ghost" id="decryptFillToken"><i class="fa-solid fa-unlock"></i> 解密填充</button>
+            <button class="ghost" id="toggleTokenVisibility"><i class="fa-solid fa-eye"></i> 显示 / 隐藏 Token</button>
+            <button class="ghost" id="clearEncryptedToken"><i class="fa-solid fa-trash"></i> 清除本机密文</button>
+          </div>
+          <p class="dim">Token 仅保存在本机 localStorage，使用 AES-GCM + PBKDF2 加密；刷新页面后可用口令解密。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-cloud-arrow-up"></i> 发布内容</h3>
+          <div class="tableWrap">
+            <table id="publishTable">
+              <thead>
+                <tr>
+                  <th>选择</th>
+                  <th>文件</th>
+                  <th>说明</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <button class="primary" id="pushSelected"><i class="fa-solid fa-upload"></i> 发布选中文件</button>
+            <button class="ghost" id="downloadSelected"><i class="fa-solid fa-file-arrow-down"></i> 下载选中文件</button>
+            <button class="ghost" id="downloadAll"><i class="fa-solid fa-box-archive"></i> 逐个下载全部</button>
+          </div>
+          <p class="dim">发布前会先读取远端文件 sha，自动创建或更新，无需手动改版本号。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-truck-fast"></i> Netlify 部署（可选）</h3>
+          <p class="dim">仓库已包含 <code>netlify.toml</code>，在 Netlify 里选择本仓库、构建命令留空、发布目录填 <code>.</code> 即可。之后每次发布到 GitHub，Netlify 会自动同步。</p>
+          <p class="dim">GitHub Pages：仓库 Settings → Pages → Source 选择 <code>Deploy from a branch</code> → 分支 <code>main</code> / 目录 <code>/ (root)</code>。</p>
+        </div>
+      </section>
+
+      <!-- ------------------------------ 日志 ------------------------------ -->
+      <section class="tabpane" data-pane="log">
+        <div class="panel">
+          <h3><i class="fa-solid fa-terminal"></i> 运行日志</h3>
+          <div class="actions">
+            <button class="ghost" id="logClear"><i class="fa-solid fa-eraser"></i> 清空</button>
+            <button class="ghost" id="logCopy"><i class="fa-regular fa-copy"></i> 复制</button>
+          </div>
+          <pre id="status" class="status"></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer class="adminFoot dim">
+      <span>考试时钟 · 管理控制台 8.0 · 纯静态部署</span>
+      <span id="footStat"></span>
+    </footer>
+  </div>
+
+  <!-- 编辑弹窗 -->
+  <div id="modal" class="modal">
+    <div class="modalCard panel">
+      <div class="modalHead">
+        <b id="modalTitle">编辑</b>
+        <a class="fa-solid fa-xmark" id="modalClose"></a>
+      </div>
+      <div id="modalBody"></div>
+      <div class="actions modalFoot">
+        <button class="primary" id="modalOk">确定</button>
+        <button class="ghost" id="modalCancel">取消</button>
       </div>
     </div>
-    <div class="actions">
-      <button id="pushGitHub">推送到 GitHub</button>
-      <p class="dim">注意：GitHub 不支持账号密码进行 API 写入，请使用 PAT Token。操作将向控制台输出过程与结果。</p>
-    </div>
-    <pre id="status" class="status"></pre>
   </div>
-  <script src="./js/admin.js"></script>
+
+  <!-- 数据层：与主站共用 -->
+  <script src="./js/gallery.js?v=8.0.0"></script>
+  <script src="./js/bg-data.js?v=8.0.0"></script>
+  <script src="./js/broadcast-data.js?v=8.0.0"></script>
+  <script src="./data/feed.json.js?v=8.0.0"></script>
+  <script src="./js/feed-store.js?v=8.0.0"></script>
+  <script src="./js/admin-util.js?v=8.0.0"></script>
+  <script src="./js/admin-state.js?v=8.0.0"></script>
+  <script src="./js/admin-ui.js?v=8.0.0"></script>
+  <script src="./js/admin.js?v=8.0.0"></script>
 </body>
+
 </html>

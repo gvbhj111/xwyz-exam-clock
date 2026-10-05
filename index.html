@@ -9,7 +9,8 @@
   <meta name="author" content="纸鹿(L33Z22L11@Github)">
   <meta name="description" content="考试时钟用于宣威一中考试时展示考试科目、起止时间、当前时间等信息。考试时钟背景由一卷图库提供，祝各位同学使用考试时钟时心情愉悦，考试顺利。">
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/main.css?v=8.0.0">
+  <link rel="stylesheet" href="./css/bg-alert.css?v=8.0.0">
   <link rel="stylesheet" href="https://lib.baomitu.com/font-awesome/6.5.1/css/all.min.css" media="none"
     onload="this.media='all'">
   <link rel="stylesheet" href="https://fonts.font.im/css?family=Ubuntu:400,700" media="none" onload="this.media='all'">
@@ -25,7 +26,7 @@
 </head>
 
 <body>
-  <link rel="stylesheet" href="./css/cover.css">
+  <link rel="stylesheet" href="./css/cover.css?v=8.0.0">
   <div id="coverLaunch">
     <p>考试时钟用于宣威一中考试时展示考试科目、起止时间、当前时间等信息。考试时钟背景由一卷图库提供，祝各位同学使用考试时钟时心情愉悦，考试顺利。</p>
   </div>
@@ -68,7 +69,7 @@
     </div>
   </div>
 
-  <script src="./js/cover.js"></script>
+  <script src="./js/cover.js?v=8.0.0"></script>
 
   <div id="main" style="opacity:1;font-size:1em;">
     <div class="notify">
@@ -83,6 +84,34 @@
         </p>
         <a class="fa-solid fa-xmark"></a>
       </div>
+      <!-- 考试广播横幅 -->
+      <div id="alert" data-level="notice" style="display:none">
+        <div class="alertHead">
+          <span id="alertTitle">广播</span>
+          <span class="alertTools">
+            <a class="fa-solid fa-rotate-right" id="alertReplay" data-sub="重播" title="重播上一条广播"></a>
+            <a class="fa-solid fa-volume-high" id="alertMute" data-sub="语音开" title="语音开关"></a>
+            <a class="fa-solid fa-list-ul" id="alertPanelBtn" data-sub="记录" title="广播记录"></a>
+            <a class="fa-solid fa-xmark" id="alertClose" data-sub="关闭" title="关闭横幅"></a>
+          </span>
+        </div>
+        <p id="alertText">广播内容</p>
+        <p class="dim alertFoot"><span id="alertTime"></span></p>
+      </div>
+    </div>
+
+    <!-- 广播记录面板 -->
+    <div id="alertPanel">
+      <div class="space-between">
+        <b><i class="fa-solid fa-bullhorn"></i> 广播中心</b>
+        <span class="space">
+          <a class="btn" id="alertNotifyPerm">开启系统通知</a>
+          <a class="btn" id="alertClearLog">清空记录</a>
+        </span>
+      </div>
+      <ul id="alertLog">
+        <li class="dim">暂无播报记录</li>
+      </ul>
     </div>
 
     <div>
@@ -115,10 +144,27 @@
 
           <div class="dropdown">
             <a class="fa-regular fa-images" data-sub="背景"></a>
-            <div style="right:-4em;min-width:13em;">
-              <div><i class="fa-solid fa-wand-magic-sparkles"></i> 选张背景
+            <div style="right:-4em;min-width:15em;">
+              <div><i class="fa-solid fa-wand-magic-sparkles"></i> 背景轮播
+                <div class="shieldlist" id="bgSourceList"></div>
+              </div>
+              <div><i class="fa-solid fa-clock-rotate-left"></i> 切换间隔
+                <div class="shieldlist" id="bgIntervalList"></div>
+              </div>
+              <div><i class="fa-solid fa-palette"></i> 画面效果
+                <div class="shieldlist" id="bgEffectList"></div>
+              </div>
+              <div><i class="fa-solid fa-play"></i> 自动轮播
+                <div class="shieldlist">
+                  <a id="bgPlayToggle" onclick="bgTogglePlay()">暂停 / 继续</a>
+                  <a onclick="bgNext()">下一张</a>
+                  <a onclick="bgSetCustom()">自定义图片/网址</a>
+                  <a onclick="bgClearCustom()">恢复默认</a>
+                </div>
+              </div>
+              <div><i class="fa-solid fa-images"></i> 图库卷（背景）
                 <div class="shieldlist" id="bgVolList">
-                  <a onclick="playCover(bg())">全部</a>
+                  <a onclick="bg()">随机全部</a>
                 </div>
               </div>
               <div>
@@ -224,19 +270,29 @@
             更新于 <span id="lastCommit">(获取中)</span></a>
         </p>
         <p><i class="fa-solid fa-file-arrow-up"></i>
-          V 7.3.6 恢复来源提醒
+          V 8.0.0 背景轮播 + 考试广播 + 新版后台
         </p>
       </div>
     </footer>
   </div>
-  <script src="./js/clock.js"></script>
-  <script src="./js/exam.js" defer data-dependencies="clock"></script>
-  <script src="./js/search.js" defer data-dependencies="clock"></script>
-  <script src="./js/commit.js"
+  <script src="./js/clock.js?v=8.0.0"></script>
+  <script src="./js/exam.js?v=8.0.0" defer data-dependencies="clock"></script>
+  <script src="./js/search.js?v=8.0.0" defer data-dependencies="clock"></script>
+  <script src="./js/commit.js?v=8.0.0"
     onload="getLastCommit(document.getElementById('lastCommit'), 'gvbhj111/xwyz-exam-clock')"></script>
-  <script src="./js/msg.js"></script>
-  <script src="./js/interact.js" defer data-dependencies="msg"></script>
-  <script src="./js/gallery.js" defer data-dependencies="msg,interact"></script>
+  <script src="./js/msg.js?v=8.0.0"></script>
+  <script src="./js/interact.js?v=8.0.0" defer data-dependencies="msg"></script>
+  <script src="./js/gallery.js?v=8.0.0" defer data-dependencies="msg,interact"></script>
+
+  <script src="./js/bg-data.js?v=8.0.0"></script>
+  <script src="./js/background.js?v=8.0.0" defer data-dependencies="gallery"></script>
+  <script src="./js/ui-bg.js?v=8.0.0" defer data-dependencies="background"></script>
+
+  <script src="./data/feed.json.js?v=8.0.0"></script>
+  <script src="./js/site-data.js?v=8.0.0"></script>
+  <script src="./js/broadcast-data.js?v=8.0.0"></script>
+  <script src="./js/feed-store.js?v=8.0.0" defer data-dependencies="clock"></script>
+  <script src="./js/broadcast.js?v=8.0.0" defer data-dependencies="feed-store"></script>
 
   <!-- 此处为页面加载时的弹出信息 -->
   <script>

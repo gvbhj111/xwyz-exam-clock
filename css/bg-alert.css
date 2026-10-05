@@ -1,0 +1,191 @@
+/*
+ * 背景轮播 + 考试广播 的界面样式
+ * （在 main.css 之后加载）
+ */
+
+/*
+ * 1. 背景层
+ * html 上的 CSS 变量由 js/background.js 注入：
+ *   --bg-filter 画面滤镜  --bg-focus 定位  --bg-darken 遮罩浓度
+ *   --bg-transition 过渡时长  --bg-kenburns 缓慢缩放开关
+ */
+#bgLayer {
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  overflow: hidden;
+  background: #111;
+  pointer-events: none;
+}
+
+#bgLayer .bgFrame {
+  position: absolute;
+  inset: -2%;
+  opacity: 0;
+  transition: opacity var(--bg-transition, 1200ms) ease-in-out;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: var(--bg-focus, center center);
+  filter: var(--bg-filter, "");
+  will-change: opacity, transform;
+}
+
+#bgLayer .bgFrame.show {
+  opacity: 1;
+  animation: bgKenBurns 40s ease-in-out infinite alternate;
+}
+
+html.kenburns-off #bgLayer .bgFrame.show {
+  animation: none;
+}
+
+@keyframes bgKenBurns {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.08);
+  }
+}
+
+#bgVideo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%;
+  min-height: 100%;
+  filter: var(--bg-filter, "");
+  object-fit: cover;
+}
+
+/* 遮罩：把背景压暗，保证文字可读 */
+#main {
+  background: rgb(0 0 0 / var(--bg-darken, .5));
+}
+
+/* 面板里当前生效的选项 */
+#bgIntervalList a[data-active],
+#bgEffectList a[data-active],
+#bgSourceList a[data-active] {
+  outline: .1em solid #7af;
+}
+
+/*
+ * 2. 考试广播横幅
+ */
+#alert {
+  border-left: .2em solid #7af;
+  border-radius: .2rem;
+  padding: .2rem .3rem;
+  background: rgb(255 255 255 / 18%);
+  font-size: .5rem;
+}
+
+#alert.show {
+  display: block;
+}
+
+/* 后台可关闭横幅（仅保留语音播报） */
+html.no-banner #alert {
+  display: none !important;
+}
+
+#alert[data-level="info"] {
+  border-left-color: #7af;
+}
+
+#alert[data-level="notice"] {
+  border-left-color: #a7f;
+}
+
+#alert[data-level="important"] {
+  border-left-color: #fd0;
+}
+
+#alert[data-level="urgent"] {
+  border-left-color: #f55;
+  animation: alertPulse 1.6s infinite;
+}
+
+@keyframes alertPulse {
+  50% {
+    background: rgb(255 90 90 / 30%);
+  }
+}
+
+#alert .alertHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#alertTitle {
+  font-weight: bold;
+}
+
+#alertText {
+  margin: .1em 0;
+  font-size: 1.1em;
+  line-height: 1.3;
+}
+
+.alertTools a {
+  margin-left: .3em;
+}
+
+.alertFoot {
+  text-align: right;
+}
+
+/*
+ * 3. 广播中心面板
+ */
+#alertPanel {
+  display: none;
+  max-height: 12em;
+  overflow: auto;
+  border-radius: .2rem;
+  background: rgb(0 0 0 / 60%);
+  padding: .3rem;
+  font-size: .4rem;
+}
+
+#alertPanel.open {
+  display: block;
+  animation: fade .3s;
+}
+
+#alertPanel ul {
+  margin-top: .2em;
+  list-style: none;
+}
+
+#alertPanel li {
+  border-bottom: .05em solid rgb(255 255 255 / 10%);
+  padding: .15em 0;
+}
+
+#alertPanel li[data-level="important"] b {
+  color: #fd0;
+}
+
+#alertPanel li[data-level="urgent"] b {
+  color: #f77;
+}
+
+#alertPanel .btn {
+  display: inline-block;
+  margin-left: .2em;
+  padding: .05em .3em;
+  font-size: 1em;
+}
+
+/* 窄屏适配 */
+@media (aspect-ratio <=8/7) {
+  #alert {
+    font-size: .55rem;
+  }
+}
