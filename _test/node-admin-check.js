@@ -34,6 +34,7 @@ const ADMIN_IDS = [
   "clkEnabled", "clkMinutes", "clkOnlyExam", "clkTemplate",
   "disEnabled", "disEvery", "disOnlyExam", "disItems",
   "tsEnabled", "tsUrl", "tsField", "tsOffset", "brSave", "brTestVoice", "brTestAlert",
+  "examToggleTable", "exAllOn", "exAllOff", "exReload", "exSave", "exHint", "discPreview",
   "loadExam", "formatExam", "checkExam", "downloadExam", "examFile", "examEditor", "examHint", "examTable",
   "thSlogan", "thSchool", "thVersion", "thAccent", "thDarken", "thTip", "thSave", "thReset",
   "ghOwner", "ghRepo", "ghBranch", "ghMessage", "ghToken", "ghPass",
@@ -51,7 +52,7 @@ const env = makeEnv({
     ...["dash", "bg", "broadcast", "rules", "exam", "theme", "publish", "log"].map(t => ({ id: "pane-" + t, attr: "data-pane", val: t }))
   ],
   // 表格元素需要一个 tbody 子节点（真实 DOM 由 HTML 解析器生成）
-  rows: ["bgSourceTable", "bcTable", "examTable", "publishTable"],
+  rows: ["bgSourceTable", "bcTable", "examTable", "publishTable", "examToggleTable"],
   // 模拟 GitHub Contents API：读取返回 404（新建文件），PUT 返回成功
   fetch: (url, opts) => {
     if (opts && opts.method === "PUT") {
@@ -121,10 +122,7 @@ chk("概览：广播条数已渲染", /条/.test(doc.getElementById("statMessage
 /* ---- 标签页 ---- */
 function tab(name) {
   const a = doc._allByAttr("data-tab", name)[0];
-  if (a) {
-    if (typeof a.onclick === "function") a.onclick();
-    else win.AdminUI && null;
-  }
+  if (a && typeof a.onclick === "function") a.onclick();
   return !!a;
 }
 ["bg", "broadcast", "rules", "exam", "theme", "publish", "log", "dash"].forEach(n => tab(n));
@@ -164,6 +162,28 @@ chk("规则：开考前节点已保存", JSON.stringify(saved.exam.beforeStart) 
 chk("规则：报时已保存", saved.clock.enabled === true && saved.clock.minutes.length === 2, JSON.stringify(saved.clock.minutes));
 chk("规则：纪律条目已保存", saved.discipline.items.length === 2, JSON.stringify(saved.discipline.items));
 chk("规则已同步到 FeedStore", win.FeedStore.getConfig().exam.beforeStart.length === 3);
+
+/* ---- 逐场考试自动播报开关 ---- */
+tab("exam");
+doc.getElementById("examEditor").value = fs.readFileSync(path.join(ROOT, "js/exam.js"), "utf8");
+doc.getElementById("checkExam").onclick();
+tab("rules");
+win.AdminUI.renderExamToggle();
+chk("考试开关表已渲染", rowCount("examToggleTable") >= 8, rowCount("examToggleTable") + " 行");
+const boxes = doc._allByAttr("data-act", "mute");
+chk("考试开关是复选框", boxes.length >= 8, boxes.length + " 个");
+chk("默认全部开启", boxes.every(c => c.checked), boxes.filter(c => c.checked).length + "/" + boxes.length);
+doc.getElementById("exAllOff").onclick();
+chk("全部关闭生效", doc._allByAttr("data-act", "mute").every(c => !c.checked));
+doc.getElementById("exAllOn").onclick();
+chk("全部开启生效", doc._allByAttr("data-act", "mute").every(c => c.checked));
+doc._allByAttr("data-act", "mute")[0].checked = false;   // 只关掉第一个
+doc.getElementById("exSave").onclick();
+const muted = win.AdminState.state.br.exam.mutedTypes;
+chk("关闭的考试类型已保存", Array.isArray(muted) && muted.length === 1, JSON.stringify(muted));
+chk("保存后同步到 FeedStore", JSON.stringify(win.FeedStore.getConfig().exam.mutedTypes) === JSON.stringify(muted), JSON.stringify(win.FeedStore.getConfig().exam.mutedTypes));
+const brOutEarly = win.AdminState.buildBroadcastData();
+chk("mutedTypes 已写入生成的配置", /"mutedTypes"/.test(brOutEarly), (/\"mutedTypes\":\s*\[[^\]]*\]/.exec(brOutEarly) || [""])[0]);
 
 /* ---- 数据生成 ---- */
 tab("publish");

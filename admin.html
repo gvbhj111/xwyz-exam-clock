@@ -9,7 +9,7 @@
   <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="https://lib.baomitu.com/font-awesome/6.5.1/css/all.min.css" media="none"
     onload="this.media='all'">
-  <link rel="stylesheet" href="./css/admin.css?v=8.0.0">
+  <link rel="stylesheet" href="./css/admin.css?v=8.1.0">
 </head>
 
 <body>
@@ -374,6 +374,36 @@
         </div>
 
         <div class="panel">
+          <h3><i class="fa-solid fa-toggle-on"></i> 逐场考试自动播报开关</h3>
+          <p class="dim">不想在 <code>exam.js</code> 里一个个改 <code>voiceReminder</code>？直接在这里勾选即可。
+            取消勾选的考试类型，在它进行期间<b>不会</b>自动播报开考 / 结束 / 报时 / 纪律提示（手动发布的广播不受影响）。
+            设置保存在 <code>js/broadcast-data.js</code> 的 <code>exam.mutedTypes</code>。</p>
+          <div class="actions">
+            <button class="ghost" id="exAllOn"><i class="fa-solid fa-check-double"></i> 全部开启</button>
+            <button class="ghost" id="exAllOff"><i class="fa-solid fa-ban"></i> 全部关闭</button>
+            <button class="ghost" id="exReload"><i class="fa-solid fa-rotate"></i> 重新载入类型</button>
+            <span class="dim" id="exHint">正在加载考试类型…</span>
+          </div>
+          <div class="tableWrap">
+            <table id="examToggleTable">
+              <thead>
+                <tr>
+                  <th>自动播报</th>
+                  <th>标识</th>
+                  <th>考试类型</th>
+                  <th>标语</th>
+                  <th>exam.js 里的 voiceReminder</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <button class="primary" id="exSave"><i class="fa-solid fa-floppy-disk"></i> 保存开关</button>
+          </div>
+        </div>
+
+        <div class="panel">
           <h3><i class="fa-solid fa-clock"></i> 整点报时</h3>
           <div class="grid">
             <label>启用
@@ -615,15 +645,15 @@
   </div>
 
   <!-- 数据层：与主站共用 -->
-  <script src="./js/gallery.js?v=8.0.0"></script>
-  <script src="./js/bg-data.js?v=8.0.0"></script>
-  <script src="./js/broadcast-data.js?v=8.0.0"></script>
-  <script src="./data/feed.json.js?v=8.0.0"></script>
-  <script src="./js/feed-store.js?v=8.0.0"></script>
-  <script src="./js/admin-util.js?v=8.0.0"></script>
-  <script src="./js/admin-state.js?v=8.0.0"></script>
-  <script src="./js/admin-ui.js?v=8.0.0"></script>
-  <script src="./js/admin.js?v=8.0.0"></script>
+  <script src="./js/gallery.js?v=8.1.0"></script>
+  <script src="./js/bg-data.js?v=8.1.0"></script>
+  <script src="./js/broadcast-data.js?v=8.1.0"></script>
+  <script src="./data/feed.json.js?v=8.1.0"></script>
+  <script src="./js/feed-store.js?v=8.1.0"></script>
+  <script src="./js/admin-util.js?v=8.1.0"></script>
+  <script src="./js/admin-state.js?v=8.1.0"></script>
+  <script src="./js/admin-ui.js?v=8.1.0"></script>
+  <script src="./js/admin.js?v=8.1.0"></script>
 </body>
 
 </html>

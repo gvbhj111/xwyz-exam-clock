@@ -31,6 +31,9 @@ window.BROADCAST_CONFIG = {
   /* 考试节点自动播报。{n} 会被替换为分钟数 */
   exam: {
     enabled: true,
+    /* 单独关闭某些考试类型的自动播报：
+       examMuted 里填 exams 的键（如 251、25、302），后台"自动播报"页可勾选 */
+    mutedTypes: [],
     beforeStart: [30, 15, 5],    // 开考前 N 分钟
     afterStart: [15, 30],        // 开考后 N 分钟（剩余时间提示）
     beforeEnd: [30, 15, 5, 1],   // 结束前 N 分钟

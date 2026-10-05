@@ -251,8 +251,11 @@
     if (isNaN(+subject.start) || isNaN(+subject.end)) return;
     var name = String(subject.name || "").trim();
     if (!name) return;
+    // 按考试类型单独关闭自动播报（后台可视化勾选）
+    var cur = subject.current;
+    if (isExamMuted(cur)) return;
     var dateKey = d.toISOString().slice(0, 10);
-    var base = dateKey + "|" + name + "|";
+    var base = dateKey + "|" + cur + "|" + name + "|";
     var start = +subject.start, end = +subject.end, t = +d;
     var minutes;
 
@@ -285,8 +288,19 @@
 
   function duringExam() {
     if (typeof subject === "undefined" || !subject.start || !subject.end) return false;
+    if (isExamMuted(subject.current)) return false;
     var t = +nowDate();
     return t >= +subject.start && t <= +subject.end;
+  }
+
+  /* 某考试类型是否被单独关闭了自动播报 */
+  function isExamMuted(type) {
+    if (type == null) return false;
+    var st = cfg().exam || {};
+    var muted = st.mutedTypes || [];
+    if (muted.indexOf(type) >= 0 || muted.indexOf(String(type)) >= 0) return true;
+    if (typeof exams !== "undefined" && exams[type] && exams[type].voiceReminder === false) return true;
+    return false;
   }
 
   /* 整点报时 */

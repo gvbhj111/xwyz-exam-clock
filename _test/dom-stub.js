@@ -55,6 +55,17 @@ class El {
   get innerHTML() { return this._html; }
   set innerHTML(v) {
     this._html = String(v == null ? "" : v);
+    // 只摘掉真正挂在这棵树上的旧子节点（解析出来的"影子"元素本来就未挂载）
+    const drop = (node) => {
+      if (!node.parentNode) return;
+      (node.children || []).forEach(drop);
+      if (node.__register && node.id) {
+        const cur = this.__doc && this.__doc._byId.get(node.id);
+        if (cur === node) this.__doc._byId.delete(node.id);
+      }
+      node.parentNode = null;
+    };
+    this.children.forEach(drop);
     this.children = [];
     this._rows = [];
     const rows = this._html.match(/<tr[\s>]/gi);
@@ -77,7 +88,6 @@ class El {
   addEventListener() { }
   removeEventListener() { }
   querySelector() { return null; }
-  querySelectorAll() { return []; }
   click() { if (typeof this.onclick === "function") this.onclick({ target: this }); }
   get offsetWidth() { return 1920; }
   get offsetHeight() { return 1080; }
@@ -114,16 +124,7 @@ function makeEnv(opts) {
     addEventListener: (ev, fn) => { (doc._listeners[ev] = doc._listeners[ev] || []).push(fn); },
     removeEventListener: () => { },
     querySelector: () => null,
-    querySelectorAll: (sel) => {
-      if (sel === "footer p:last-child") return [];
-      // 管理后台通过选择器批量绑定事件，这里把注册好的 data-tab 按钮交回去
-      if (/^#tabs a$/.test(sel)) return allEls.filter(e => e.getAttribute("data-tab"));
-      if (/^\.tabpane$/.test(sel)) return allEls.filter(e => e.getAttribute("data-pane"));
-      if (/^a\[data-i\]$/.test(sel)) return allEls.filter(e => e.getAttribute("data-i") != null);
-      if (/^button$/.test(sel)) return allEls.filter(e => e.tagName === "BUTTON");
-      if (/input\[type=checkbox\]$/.test(sel)) return allEls.filter(e => e.tagName === "INPUT" && e.type === "checkbox" && e.checked);
-      return [];
-    },
+    querySelectorAll: () => [],
     write() { },
     _listeners: {},
     _register: (id, tag) => {
@@ -135,21 +136,74 @@ function makeEnv(opts) {
       doc.body.appendChild(e);
       return e;
     },
-    _allByAttr: (attr, val) => allEls.filter(e => e.getAttribute(attr) === val),
+    _allByAttr: (attr, val) => live().filter(e => e.getAttribute(attr) === val),
     _byId: byId,
     _all: allEls,
     dispatch: (ev) => (doc._listeners[ev] || []).forEach(fn => fn({}))
   };
   doc.documentElement.__register = (i, el) => byId.set(i, el);
+
+  /* 只把真正挂到文档树上的元素算作"存在"（解析出来的影子元素不算） */
+  /* 元素级选择器：支持 [attr] / [attr=value]，在当前子树内查找 */
+  El.prototype.querySelectorAll = function (sel) {
+    const self = this;
+    const out = [];
+    const walk = (node) => {
+      (node.children || []).forEach((c) => {
+        if (matchSel(c, sel)) out.push(c);
+        walk(c);
+      });
+    };
+    walk(self);
+    return out;
+  };
+  function matchSel(e, sel) {
+    // 支持 tag、.class、[attr]、[attr=value] 以及它们的组合
+    const m = /^([a-zA-Z][\w-]*)?(\.[\w-]+)?\[([\w-]+)(?:=["']?([^\]"']*)["']?)?\]$/.exec(sel);
+    if (m) {
+      if (m[1] && e.tagName !== m[1].toUpperCase()) return false;
+      if (m[2] && !e.classList.contains(m[2].slice(1))) return false;
+      if (m[4] === undefined) return e.getAttribute(m[3]) != null;
+      return e.getAttribute(m[3]) === m[4];
+    }
+    const m2 = /^([a-zA-Z][\w-]*)$/.exec(sel);
+    if (m2) return e.tagName === m2[1].toUpperCase();
+    return false;
+  }
+
+  const attached = (e) => {
+    let cur = e;
+    while (cur) {
+      if (cur === doc.documentElement || cur === doc.body || cur === doc.head) return true;
+      cur = cur.parentNode;
+    }
+    return false;
+  };
+  const live = () => allEls.filter(attached);
+  doc._live = live;
+
   doc.head.parentNode = doc.documentElement;
   doc.body.parentNode = doc.documentElement;
 
+  doc.querySelectorAll = (sel) => {
+    if (sel === "footer p:last-child") return [];
+    // 管理后台通过选择器批量绑定/读取事件元素
+    if (/^#tabs a$/.test(sel)) return live().filter(e => e.getAttribute("data-tab"));
+    if (/^\.tabpane$/.test(sel)) return live().filter(e => e.getAttribute("data-pane"));
+    if (/^a\[data-i\]$/.test(sel)) return live().filter(e => e.getAttribute("data-i") != null);
+    if (/^button$/.test(sel)) return live().filter(e => e.tagName === "BUTTON");
+    if (/input\[type=checkbox\]$/.test(sel)) return live().filter(e => e.tagName === "INPUT" && e.type === "checkbox" && e.checked);
+    const mAttr = /\[([\w-]+)(?:=["']?([^\]"']*)["']?)?\]/.exec(sel);
+    if (mAttr) return live().filter(e => e.getAttribute(mAttr[1]) === (mAttr[2] === undefined ? "" : mAttr[2]));
+    return [];
+  };
+
   (opts.ids || []).forEach(id => doc._register(id));
-  // 一些脚本需要按属性查找的节点
+  // 一些脚本需要按属性查找的节点（例如后台的 data-tab 导航按钮）
   (opts.attrs || []).forEach(a => {
-    const e = doc.createElement("a");
-    e.id = a.id;
+    const e = doc._register(a.id, a.tag || "a");
     e.setAttribute(a.attr, a.val);
+    if (a.text != null) e.textContent = a.text;
   });
 
   // 解析 HTML 串中的元素（只处理属性，不建文本节点），用于自检脚本按选择器查找
@@ -183,6 +237,8 @@ function makeEnv(opts) {
     t.querySelector = (sel) => (sel === "tbody" ? tb : null);
     t.querySelectorAll = () => [];
     t.__tb = tb;
+    t.appendChild(tb);
+    doc.body.appendChild(t);
   });
 
   // 页面初始状态

@@ -9,8 +9,8 @@
   <meta name="author" content="纸鹿(L33Z22L11@Github)">
   <meta name="description" content="考试时钟用于宣威一中考试时展示考试科目、起止时间、当前时间等信息。考试时钟背景由一卷图库提供，祝各位同学使用考试时钟时心情愉悦，考试顺利。">
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="./css/main.css?v=8.0.0">
-  <link rel="stylesheet" href="./css/bg-alert.css?v=8.0.0">
+  <link rel="stylesheet" href="./css/main.css?v=8.1.0">
+  <link rel="stylesheet" href="./css/bg-alert.css?v=8.1.0">
   <link rel="stylesheet" href="https://lib.baomitu.com/font-awesome/6.5.1/css/all.min.css" media="none"
     onload="this.media='all'">
   <link rel="stylesheet" href="https://fonts.font.im/css?family=Ubuntu:400,700" media="none" onload="this.media='all'">
@@ -26,7 +26,7 @@
 </head>
 
 <body>
-  <link rel="stylesheet" href="./css/cover.css?v=8.0.0">
+  <link rel="stylesheet" href="./css/cover.css?v=8.1.0">
   <div id="coverLaunch">
     <p>考试时钟用于宣威一中考试时展示考试科目、起止时间、当前时间等信息。考试时钟背景由一卷图库提供，祝各位同学使用考试时钟时心情愉悦，考试顺利。</p>
   </div>
@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <script src="./js/cover.js?v=8.0.0"></script>
+  <script src="./js/cover.js?v=8.1.0"></script>
 
   <div id="main" style="opacity:1;font-size:1em;">
     <div class="notify">
@@ -168,15 +168,11 @@
                 </div>
               </div>
               <div>
-                <p><i class="fa-brands fa-qq"></i> 投稿QQ:3506828655 </p>
                 <p class="dim">遵照
                   <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>
                   协议使用作品。
                 </p>
               </div>
-              <a href="https://img.tg/album/Oy7xg">
-                <i class="fa-solid fa-box-archive"></i> 一中图库
-              </a>
             </div>
           </div>
 
@@ -269,30 +265,35 @@
         <p><a href="https://github.com/gvbhj111/xwyz-exam-clock"><i class="fa-brands fa-github"></i>
             更新于 <span id="lastCommit">(获取中)</span></a>
         </p>
+        <p>
+          <a href="./admin.html" data-title="管理控制台：背景轮播 / 考试广播 / 考试数据" title="管理控制台">
+            <i class="fa-solid fa-user-shield"></i> 管理入口
+          </a>
+        </p>
         <p><i class="fa-solid fa-file-arrow-up"></i>
-          V 8.0.0 背景轮播 + 考试广播 + 新版后台
+          V 8.1.0 广播开关 + 管理入口
         </p>
       </div>
     </footer>
   </div>
-  <script src="./js/clock.js?v=8.0.0"></script>
-  <script src="./js/exam.js?v=8.0.0" defer data-dependencies="clock"></script>
-  <script src="./js/search.js?v=8.0.0" defer data-dependencies="clock"></script>
-  <script src="./js/commit.js?v=8.0.0"
+  <script src="./js/clock.js?v=8.1.0"></script>
+  <script src="./js/exam.js?v=8.1.0" defer data-dependencies="clock"></script>
+  <script src="./js/search.js?v=8.1.0" defer data-dependencies="clock"></script>
+  <script src="./js/commit.js?v=8.1.0"
     onload="getLastCommit(document.getElementById('lastCommit'), 'gvbhj111/xwyz-exam-clock')"></script>
-  <script src="./js/msg.js?v=8.0.0"></script>
-  <script src="./js/interact.js?v=8.0.0" defer data-dependencies="msg"></script>
-  <script src="./js/gallery.js?v=8.0.0" defer data-dependencies="msg,interact"></script>
+  <script src="./js/msg.js?v=8.1.0"></script>
+  <script src="./js/interact.js?v=8.1.0" defer data-dependencies="msg"></script>
+  <script src="./js/gallery.js?v=8.1.0" defer data-dependencies="msg,interact"></script>
 
-  <script src="./js/bg-data.js?v=8.0.0"></script>
-  <script src="./js/background.js?v=8.0.0" defer data-dependencies="gallery"></script>
-  <script src="./js/ui-bg.js?v=8.0.0" defer data-dependencies="background"></script>
+  <script src="./js/bg-data.js?v=8.1.0"></script>
+  <script src="./js/background.js?v=8.1.0" defer data-dependencies="gallery"></script>
+  <script src="./js/ui-bg.js?v=8.1.0" defer data-dependencies="background"></script>
 
-  <script src="./data/feed.json.js?v=8.0.0"></script>
-  <script src="./js/site-data.js?v=8.0.0"></script>
-  <script src="./js/broadcast-data.js?v=8.0.0"></script>
-  <script src="./js/feed-store.js?v=8.0.0" defer data-dependencies="clock"></script>
-  <script src="./js/broadcast.js?v=8.0.0" defer data-dependencies="feed-store"></script>
+  <script src="./data/feed.json.js?v=8.1.0"></script>
+  <script src="./js/site-data.js?v=8.1.0"></script>
+  <script src="./js/broadcast-data.js?v=8.1.0"></script>
+  <script src="./js/feed-store.js?v=8.1.0" defer data-dependencies="clock"></script>
+  <script src="./js/broadcast.js?v=8.1.0" defer data-dependencies="feed-store"></script>
 
   <!-- 此处为页面加载时的弹出信息 -->
   <script>

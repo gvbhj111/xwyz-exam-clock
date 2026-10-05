@@ -112,7 +112,7 @@
     if (!St.state.examSource) UI.loadExamText();
     else {
       if ($("examEditor")) $("examEditor").value = St.state.examSource;
-      if (St.state.examTypes) UI.renderExamTable(St.state.examTypes);
+      if (St.state.examTypes) { UI.renderExamTable(St.state.examTypes); UI.renderExamToggle(); }
     }
     if (global.speechSynthesis) {
       global.speechSynthesis.onvoiceschanged = function () { UI.fillVoices(St.state.br.settings.voiceName); };
@@ -362,6 +362,23 @@
       if (global.Broadcast) global.Broadcast.test("important");
     });
 
+    /* ---- 逐场考试自动播报开关 ---- */
+    on("exAllOn", "onclick", function () { UI.setAllMuted(false); });
+    on("exAllOff", "onclick", function () { UI.setAllMuted(true); });
+    on("exReload", "onclick", function () { UI.loadExamText(); });
+    on("exSave", "onclick", function () {
+      var muted = UI.collectMuted();
+      St.state.br.exam = St.state.br.exam || {};
+      St.state.br.exam.mutedTypes = muted;
+      St.state.draftMuted = muted.slice();
+      St.save();
+      St.markDirty("js/broadcast-data.js");
+      if (global.FeedStore) global.FeedStore.setConfig(St.state.br);
+      log("自动播报开关已保存：关闭 " + muted.length + " 个考试类型" + (muted.length ? "（" + muted.join("/") + "）" : ""));
+      UI.renderExamToggle();
+      U.toast(muted.length ? "已关闭 " + muted.length + " 个考试类型的自动播报" : "所有考试类型均开启自动播报");
+    });
+
     /* ---- 考试数据 ---- */
     on("loadExam", "onclick", UI.loadExamText);
     on("downloadExam", "onclick", function () {
@@ -383,7 +400,9 @@
       var types = UI.collectExamTypes(v);
       if (types) {
         St.state.examTypes = types;
+        St.state.draftMuted = null;
         UI.renderExamTable(types);
+        UI.renderExamToggle();
         $("examHint").innerHTML = '<span class="ok">语法正常，共 ' + types.length + " 个考试类型</span>";
         log("exam.js 语法检查通过，共 " + types.length + " 个类型");
       } else {

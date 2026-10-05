@@ -34,6 +34,8 @@
     br: null,        // 广播配置（BROADCAST_CONFIG 结构）
     theme: null,
     examSource: null,
+    examTypes: null,
+    draftMuted: null,
     dirty: {},
     gh: { owner: "gvbhj111", repo: "xwyz-exam-clock", branch: "main", message: "chore(admin): update exam clock data", token: "" },
     editingSourceId: null

@@ -217,7 +217,42 @@ node _test/node-admin-check.js   # 后台：登录 / 各页面 / 广播 / 发布
 
 ---
 
-## 六、许可与致谢
+## 六、备份与回滚
+
+改动前的原始版本已经做了三重备份，随时可以退回去：
+
+| 备份方式 | 位置 | 用途 |
+| --- | --- | --- |
+| Git 分支 | `backup/legacy-7.3.6` | 本地随时切回旧代码 |
+| Git 标签 | `backup-7.3.6` | 同上，带说明的里程碑 |
+| 压缩包 | `backup/xwyz-exam-clock-7.3.6-original.zip` | 不依赖 Git 的整包快照（可拷贝到U盘） |
+| 远程 | `origin/main`（未推送新提交） | 远端仍是旧版本，随时 `git fetch` 找回 |
+
+常用命令：
+
+```bash
+# 看一下有哪些备份
+git branch -a && git tag
+
+# 只把某个文件退回旧版本
+git checkout backup/legacy-7.3.6 -- js/exam.js
+
+# 全部退回旧版本（丢弃当前改动，谨慎）
+git reset --hard backup/legacy-7.3.6
+
+# 只是撤销最近一次提交但保留文件
+git reset --soft HEAD~1
+```
+
+想再生成一次压缩包快照：
+
+```bash
+git archive --format=zip --output=backup/snapshot.zip <提交号或分支名>
+```
+
+---
+
+## 七、许可与致谢
 
 - 原项目：[L33Z22L11/ExamClock](https://github.com/L33Z22L11/ExamClock)（纸鹿）；本仓库为宣威一中改编版。
 - 背景图片来自一卷图库与投稿作者，以 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh) 协议使用，请勿商用。

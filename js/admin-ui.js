@@ -341,6 +341,59 @@
     $("tsUrl").value = t.url || "";
     $("tsField").value = t.field || "";
     $("tsOffset").value = t.offsetMs || 0;
+    renderExamToggle();
+  }
+
+  /* --------------------------------------------- 逐场考试自动播报开关 */
+  function mutedList() {
+    if (!St.state.draftMuted) {
+      St.state.draftMuted = (St.state.br.exam && St.state.br.exam.mutedTypes || []).map(String);
+    }
+    return St.state.draftMuted;
+  }
+
+  function renderExamToggle() {
+    var tb = $("examToggleTable") && $("examToggleTable").querySelector("tbody");
+    if (!tb) return;
+    var types = St.state.examTypes;
+    var hint = $("exHint");
+    if (!types || !types.length) {
+      tb.innerHTML = '<tr><td colspan="5" class="dim">还没有考试类型数据，请先在“考试数据”页加载 exam.js，或点“重新载入类型”。</td></tr>';
+      if (hint) hint.textContent = "未加载 exam.js";
+      return;
+    }
+    var muted = mutedList();
+    tb.innerHTML = "";
+    types.forEach(function (t, i) {
+      var on = muted.indexOf(String(t.key)) < 0;
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td><input type="checkbox" data-act="mute" data-idx="' + i + '"' + (on ? " checked" : "") + "></td>" +
+        "<td><code>" + U.esc(t.key) + "</code></td>" +
+        "<td>" + U.esc(t.type) + "</td>" +
+        "<td>" + U.esc(String(t.slogan || "").slice(0, 24)) + "</td>" +
+        "<td>" + (t.voice === false ? '<span class="dim">未开启</span>' : '<span class="ok">已开启</span>') + "</td>";
+      tb.appendChild(tr);
+    });
+    if (hint) hint.innerHTML = "共 " + types.length + " 类，已关闭 " + muted.length + " 类";
+  }
+
+  function collectMuted() {
+    var out = [];
+    $$("#examToggleTable input[data-act=mute]").forEach(function (c) {
+      if (!c.checked) {
+        var i = +c.getAttribute("data-idx");
+        var t = St.state.examTypes && St.state.examTypes[i];
+        if (t) out.push(String(t.key));
+      }
+    });
+    return out;
+  }
+
+  function setAllMuted(allOff) {
+    var types = St.state.examTypes || [];
+    St.state.draftMuted = allOff ? types.map(function (t) { return String(t.key); }) : [];
+    renderExamToggle();
   }
 
   function fillVoices(selected) {
@@ -368,6 +421,7 @@
 
     br.exam = br.exam || {};
     br.exam.enabled = $("brExamEnabled").value === "1";
+    br.exam.mutedTypes = collectMuted();
     br.exam.beforeStart = parseNums($("brBeforeStart").value);
     br.exam.afterStart = parseNums($("brAfterStart").value);
     br.exam.beforeEnd = parseNums($("brBeforeEnd").value);
@@ -431,7 +485,11 @@
       var exams = fn(sandbox, { log: function () { }, group: function () { }, groupEnd: function () { }, groupCollapsed: function () { }, warn: function () { } });
       return Object.keys(exams).map(function (k) {
         var e = exams[k] || {};
-        return { key: k, type: e.type || k, origin: e.origin, author: e.author, slogan: e.mainSlogan || (e.rollSlogan || [])[0], voice: !!e.voiceReminder };
+        return {
+          key: k, type: e.type || k, origin: e.origin, author: e.author,
+          slogan: e.mainSlogan || (e.rollSlogan || [])[0],
+          voice: e.voiceReminder !== false
+        };
       });
     } catch (err) {
       $("examHint").innerHTML = '<span class="err">语法检查失败：' + U.esc(err.message) + "</span>";
@@ -449,7 +507,9 @@
         var types = collectExamTypes(txt);
         if (types) {
           St.state.examTypes = types;
+          St.state.draftMuted = null;
           renderExamTable(types);
+          renderExamToggle();
           $("examHint").innerHTML = '<span class="ok">已解析 ' + types.length + " 个考试类型</span>";
         }
         log("exam.js 已加载（" + txt.length + " 字符）");
@@ -510,9 +570,19 @@
     $("ghMessage").value = St.state.gh.message;
   }
 
+  /* 收集"发布"页勾选的文件（用 data-file 属性判断，兼容各种 DOM 实现） */
   function selectedFiles() {
-    return $$("#publishTable input[type=checkbox]").filter(function (c) { return c.checked; })
-      .map(function (c) { return c.getAttribute("data-file"); });
+    var table = $("publishTable");
+    if (!table) return [];
+    var out = [];
+    var visit = function (node) {
+      (node.children || []).forEach(function (c) {
+        if (c.tagName === "INPUT" && c.getAttribute("data-file") && c.checked !== false) out.push(c.getAttribute("data-file"));
+        visit(c);
+      });
+    };
+    visit(table);
+    return out;
   }
 
   global.AdminUI = {
@@ -521,6 +591,9 @@
     renderBgTable: renderBgTable,
     renderBroadcast: renderBroadcast,
     renderRules: renderRules,
+    renderExamToggle: renderExamToggle,
+    setAllMuted: setAllMuted,
+    collectMuted: collectMuted,
     renderExamTable: renderExamTable,
     renderTheme: renderTheme,
     renderPublish: renderPublish,
