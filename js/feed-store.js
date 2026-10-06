@@ -222,19 +222,43 @@
       var url = this.getFeedUrl();
       if (!url || !global.fetch) return Promise.resolve(false);
       var self = this;
-      var headers = { "Accept": "application/vnd.github+json, application/json" };
+      var headers = { "Accept": "application/vnd.github+json, application/json", "Cache-Control": "no-cache" };
       var token = (this.config.ghToken || "").trim();
       if (/api\.github\.com/.test(url) && token) headers["Authorization"] = "Bearer " + token;
+      // 走 GitHub Contents API 时先看远端是否真的变了，避免无意义的下载
       return fetch(url + (url.indexOf("?") >= 0 ? "&" : "?") + "_=" + now(), { cache: "no-store", headers: headers })
-        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (r) {
+          self.lastSyncStatus = r.ok ? "ok" : ("HTTP " + r.status);
+          if (!r.ok) { console.warn("[broadcast] 广播源读取失败：HTTP " + r.status + " @ " + url); return null; }
+          return r.json();
+        })
         .then(function (json) {
           if (!json) return false;
           var list = json.messages || (json.content != null ? self._decodeGitHub(json) : (Array.isArray(json) ? json : []));
           self.syncRemote(list);
+          self.lastSyncCount = list.length;
+          self.lastSyncError = "";
           self.emit();
           return true;
         })
-        .catch(function (e) { console.warn("[broadcast] 远程广播源读取失败：", e.message || e); return false; });
+        .catch(function (e) {
+          self.lastSyncError = e.message || String(e);
+          self.lastSyncStatus = "error";
+          console.warn("[broadcast] 远程广播源读取失败：", self.lastSyncError);
+          return false;
+        });
+    },
+
+    /* 广播源状态（后台展示用） */
+    syncStatus: function () {
+      return {
+        url: this.getFeedUrl(),
+        lastSync: this.lastSync,
+        status: this.lastSyncStatus || "未同步",
+        remoteCount: this.remoteMessages.length,
+        localCount: this.messages.length,
+        error: this.lastSyncError || ""
+      };
     },
 
     _decodeGitHub: function (json) {

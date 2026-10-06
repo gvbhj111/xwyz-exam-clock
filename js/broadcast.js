@@ -395,14 +395,14 @@
   /* 外部广播（后台发出的消息） */
   function checkFeed() {
     if (!Store) return;
-    var list = Store.active();
+    var list = Store.visible();          // 用 visible()：不受 pin/until 影响，先看全部
     list.forEach(function (m) {
       if (m.announce === "slot") return;               // 交给节点引擎
-      if (Store.seen(m.id)) return;
-      // 只有刚刚发布（10 分钟内）的广播才自动播报，避免刷新页面历史轰炸
       var age = Date.now() - new Date(m.at || 0).getTime();
+      // 太老的历史广播只标记、不播报，避免刷新页面被历史消息轰炸
+      if (age > 10 * 60000) { Store.markSeen(m.id); return; }
+      if (Store.seen(m.id)) return;
       Store.markSeen(m.id);
-      if (age > 10 * 60000) return;
       announce(m.text, {
         level: m.level, voice: m.voice || m.text, pin: m.pin,
         dedupeKey: "feed|" + m.id, source: m.source || "广播中心",

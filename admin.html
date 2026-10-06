@@ -9,7 +9,7 @@
   <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="https://lib.baomitu.com/font-awesome/6.5.1/css/all.min.css" media="none"
     onload="this.media='all'">
-  <link rel="stylesheet" href="./css/admin.css?v=8.3.0">
+  <link rel="stylesheet" href="./css/admin.css?v=8.4.0">
 </head>
 
 <body>
@@ -240,8 +240,10 @@
             <code id="bcRepoLabel">gvbhj111/xwyz-exam-clock</code>，其它大屏会在轮询间隔内自动拉取。</p>
           <div class="actions">
             <button class="primary" id="bcPublish"><i class="fa-solid fa-cloud-arrow-up"></i> 保存并发布广播（推荐）</button>
-            <button class="ghost" id="bcPull"><i class="fa-solid fa-download"></i> 立即拉取</button>
+            <button class="ghost" id="bcPull"><i class="fa-solid fa-rotate"></i> 立即同步一次</button>
+            <button class="ghost" id="bcStatusRefresh"><i class="fa-solid fa-stethoscope"></i> 检查广播源</button>
           </div>
+          <p class="dim" id="bcSyncStatus">广播源状态：正在检测…</p>
           <p class="dim" id="bcSyncHint">需要先在「发布」页填写 GitHub Token。</p>
         </div>
 
@@ -706,15 +708,15 @@
   </div>
 
   <!-- 数据层：与主站共用 -->
-  <script src="./js/gallery.js?v=8.3.0"></script>
-  <script src="./js/bg-data.js?v=8.3.0"></script>
-  <script src="./js/broadcast-data.js?v=8.3.0"></script>
-  <script src="./data/feed.json.js?v=8.3.0"></script>
-  <script src="./js/feed-store.js?v=8.3.0"></script>
-  <script src="./js/admin-util.js?v=8.3.0"></script>
-  <script src="./js/admin-state.js?v=8.3.0"></script>
-  <script src="./js/admin-ui.js?v=8.3.0"></script>
-  <script src="./js/admin.js?v=8.3.0"></script>
+  <script src="./js/gallery.js?v=8.4.0"></script>
+  <script src="./js/bg-data.js?v=8.4.0"></script>
+  <script src="./js/broadcast-data.js?v=8.4.0"></script>
+  <script src="./data/feed.json.js?v=8.4.0"></script>
+  <script src="./js/feed-store.js?v=8.4.0"></script>
+  <script src="./js/admin-util.js?v=8.4.0"></script>
+  <script src="./js/admin-state.js?v=8.4.0"></script>
+  <script src="./js/admin-ui.js?v=8.4.0"></script>
+  <script src="./js/admin.js?v=8.4.0"></script>
 </body>
 
 </html>

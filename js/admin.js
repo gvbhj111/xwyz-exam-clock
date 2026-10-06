@@ -340,11 +340,22 @@
       });
     });
     on("bcPull", "onclick", function () {
+      log("正在同步广播源：" + global.FeedStore.getFeedUrl());
       global.FeedStore.fetchRemote().then(function (ok) {
-        UI.renderBroadcast(); UI.renderDash();
-        U.toast(ok ? "已拉取远程广播" : "拉取失败或未配置广播源", ok ? "" : "err");
+        UI.renderBroadcast(); UI.renderDash(); UI.renderSyncStatus();
+        var n = (global.FeedStore.remoteMessages || []).length;
+        log(ok ? "广播源同步成功，远端 " + n + " 条" : "广播源同步失败：" + (global.FeedStore.lastSyncStatus || "未知"));
+        U.toast(ok ? "已同步远端广播（" + n + " 条）" : "同步失败：" + (global.FeedStore.lastSyncStatus || "未知"), ok ? "" : "err");
       });
     });
+    on("bcStatusRefresh", "onclick", function () {
+      UI.renderSyncStatus();
+      global.FeedStore.fetchRemote().then(function () { UI.renderSyncStatus(); });
+    });
+    // 停在广播页时定时刷新状态，能直观看到"轮询有没有在跑"
+    setInterval(function () {
+      if (St.state.tab === "broadcast") UI.renderSyncStatus();
+    }, 5000);
     on("bcPush", "onclick", function () {
       var fs = global.FeedStore;
       if (!fs.getFeedUrl()) { U.toast("请先配置广播源地址", "err"); return; }

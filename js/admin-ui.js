@@ -278,12 +278,31 @@
     if ($("bcFeedPath")) $("bcFeedPath").value = St.state.gh.feedPath || "data/feed.json";
     if ($("bcFeedBranch")) $("bcFeedBranch").value = St.state.br.feedBranch || "main";
     if ($("bcRepoLabel")) $("bcRepoLabel").textContent = St.state.gh.owner + "/" + St.state.gh.repo;
+    renderSyncStatus();
     if ($("bcSyncHint")) {
       var hasTok = !!(St.state.gh.token || U.lsGet(U.C.LS_TOKEN, null));
       $("bcSyncHint").innerHTML = hasTok
         ? '已检测到 Token，可以直接发布广播。'
         : '需要先在「发布」页填写 GitHub Token（只需一次，之后保存在本机）。';
     }
+  }
+
+  /* 广播源同步状态：一眼看出"到底有没有在轮询" */
+  function renderSyncStatus() {
+    var el = $("bcSyncStatus");
+    if (!el) return;
+    var fs = global.FeedStore;
+    if (!fs || !fs.syncStatus) { el.textContent = "广播源状态：FeedStore 未加载"; return; }
+    var s = fs.syncStatus();
+    var when = s.lastSync ? new Date(s.lastSync).toLocaleTimeString() : "尚未同步";
+    var state = s.status === "ok" ? '<span class="ok">正常</span>'
+      : s.status === "未同步" ? '<span class="err">尚未同步成功</span>'
+        : '<span class="err">' + U.esc(s.status) + "</span>";
+    el.innerHTML = "广播源状态：" + state +
+      " · 地址 <code>" + U.esc(s.url) + "</code>" +
+      " · 上次同步 " + when +
+      " · 远端 " + s.remoteCount + " 条 / 本机 " + s.localCount + " 条" +
+      (s.error ? ' · <span class="err">' + U.esc(s.error) + "</span>" : "");
   }
 
   function sendBroadcast() {
@@ -657,6 +676,7 @@
     renderBg: renderBg,
     renderBgTable: renderBgTable,
     renderBroadcast: renderBroadcast,
+    renderSyncStatus: renderSyncStatus,
     renderRules: renderRules,
     renderAudioStatus: renderAudioStatus,
     renderExamToggle: renderExamToggle,
