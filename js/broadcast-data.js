@@ -1,6 +1,6 @@
 /*
  * 考试广播配置（Broadcast Rules）
- * 由考试时钟管理控制台生成 · 2026/10/6 10:03:27
+ * 由考试时钟管理控制台生成 · 2026/10/6 10:36:38
  * 后台可视化编辑生成，可直接手工修改。
  */
 window.BROADCAST_CONFIG = {
@@ -11,12 +11,12 @@ window.BROADCAST_CONFIG = {
     "rate": 1,
     "pitch": 1,
     "volume": 1,
-    "voiceName": "",
+    "voiceName": "Microsoft Xiaoxiao (Natural) - Chinese (Simplified, China)",
     "lang": "zh-CN",
     "minGapSeconds": 6,
     "repeatGapSeconds": 20,
     "showBanner": true,
-    "notify": false,
+    "notify": true,
     "historyLimit": 120,
     "chime": true,
     "chimeFile": "",
@@ -71,8 +71,8 @@ window.BROADCAST_CONFIG = {
       0,
       30
     ],
-    "template": "现在时间是{time}。",
-    "onlyDuringExam": true
+    "onlyDuringExam": true,
+    "template": "现在时间是{time}。"
   },
   "discipline": {
     "enabled": false,
