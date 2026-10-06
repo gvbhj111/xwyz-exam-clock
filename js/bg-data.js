@@ -1,17 +1,9 @@
 /*
  * 背景数据源配置（Background Data）
- * ------------------------------------------------------------------
- * 本文件是"自定义背景轮播"的数据层，纯静态、无依赖，
- * 可直接被 GitHub Pages / Netlify / 任意静态服务器托管。
- *
- * 来源类型：gallery | static | bing | online | local | gradient | solid | video | custom
- * 注意：用后台"发布"覆盖本文件时，请确认来源列表没有变少
- *       （后台会自动合并内置来源，避免越发布越少）。
- * ------------------------------------------------------------------
+ * 由考试时钟管理控制台生成 · 2026/10/6 10:36:36
+ * 后台可视化编辑生成，可直接手工修改。
  */
 window.BG_DATA = {
-  "version": "1.0.0",
-  "updated": "2026-10-06",
   "settings": {
     "enabled": true,
     "intervalSeconds": 120,
@@ -155,7 +147,8 @@ window.BG_DATA = {
           "name": "每日壁纸 D",
           "url": "https://cn.bing.com/th?id=OHR.SnowyHills_ZH-CN5560284453_1920x1080.jpg"
         }
-      ]
+      ],
+      "enabled": true
     },
     {
       "id": "gradient",
@@ -232,14 +225,16 @@ window.BG_DATA = {
           "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
           "poster": ""
         }
-      ]
+      ],
+      "enabled": true
     },
     {
       "id": "local-repo",
       "type": "local",
       "name": "仓库图片（./images/）",
       "weight": 3,
-      "list": []
+      "list": [],
+      "enabled": true
     },
     {
       "id": "local-user",
@@ -249,5 +244,6 @@ window.BG_DATA = {
       "list": [],
       "enabled": true
     }
-  ]
+  ],
+  "updated": "2026-10-06"
 };
