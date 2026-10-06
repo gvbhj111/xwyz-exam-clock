@@ -1,5 +1,19 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-06T02:09:19.266Z",
-  "messages": []
+  "updated": "2026-10-06T02:10:20.365Z",
+  "messages": [
+    {
+      "id": "bc-muw1jcu6",
+      "at": "2026-10-06T02:09:40.542Z",
+      "until": "",
+      "level": "notice",
+      "text": "距离考试结束还有 15 分钟，请注意把握答题时间。",
+      "voice": "距离考试结束还有 15 分钟，请注意把握答题时间。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    }
+  ]
 }
