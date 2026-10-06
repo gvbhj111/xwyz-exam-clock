@@ -1,5 +1,32 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-06T02:29:24.087Z",
-  "messages": []
+  "updated": "2026-10-06T02:32:46.132Z",
+  "messages": [
+    {
+      "id": "bc-muw2ay7u",
+      "at": "2026-10-06T02:31:07.962Z",
+      "until": "",
+      "level": "urgent",
+      "text": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
+      "voice": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muw2c5sq",
+      "at": "2026-10-06T02:32:04.442Z",
+      "until": "",
+      "level": "urgent",
+      "text": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
+      "voice": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    }
+  ]
 }
