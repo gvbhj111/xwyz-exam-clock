@@ -166,21 +166,109 @@
     return U.decryptToken(enc, pass).then(function (t) { return t; }).catch(function () { return ""; });
   }
 
+  /* 把 GitHub 返回的错误体解析成人能看懂的提示 */
+  function parseGitHubError(status, text) {
+    var msg = "";
+    try {
+      var j = JSON.parse(text || "{}");
+      msg = j.message || "";
+      if (j.errors && j.errors.length) {
+        msg += "；" + j.errors.map(function (e) { return e.message || e.code || JSON.stringify(e); }).join("；");
+      }
+    } catch (e) { msg = String(text || "").slice(0, 200); }
+    if (status === 401) {
+      return "Token 无效或已过期（401 " + msg + "）· 请在 GitHub → Settings → Developer settings 重新生成" +
+        "（Classic 勾选 repo；Fine-grained 选本仓库并把 Contents 设为 Read and write，注意有效期）";
+    }
+    if (status === 403) {
+      if (/rate limit/i.test(msg)) return "触发 GitHub 限流（403），等几分钟再试";
+      return "权限不足（403 " + msg + "）· Token 需要本仓库的 Contents 写权限";
+    }
+    if (status === 404) return "仓库或路径不存在，或 Token 无权访问该仓库（404 " + msg + "）· 检查所有者/仓库名/分支";
+    if (status === 409) return "分支冲突（409）：远端文件刚被改过，请刷新后重试";
+    if (status === 422) return "提交被拒绝（422 " + msg + "）";
+    return "HTTP " + status + (msg ? " " + msg : "");
+  }
+
+  /*
+   * Token 体检：报告"这个 Token 是谁、能不能读仓库、能不能写内容"。
+   * 发布前跑一次，避免提交到一半才发现 401。
+   */
+  function checkToken() {
+    var gh = State.gh;
+    return resolveToken().then(function (token) {
+      if (!token) return { ok: false, reason: "还没有填写 GitHub Token" };
+      var base = { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+      var authed = Object.assign({}, base, { "Authorization": "Bearer " + token });
+      var report = { ok: false, user: "", scopes: "", repoAccess: "", canWrite: "" };
+      return fetch("https://api.github.com/user", { headers: authed })
+        .then(function (r) {
+          report.scopes = r.headers.get ? (r.headers.get("x-oauth-scopes") || "") : "";
+          if (r.status === 401) return r.text().then(function (t) { throw new Error(parseGitHubError(401, t)); });
+          if (!r.ok) return r.text().then(function (t) { throw new Error(parseGitHubError(r.status, t)); });
+          return r.json();
+        })
+        .then(function (u) {
+          report.user = (u && u.login) || "（未知）";
+          return fetch("https://api.github.com/repos/" + gh.owner + "/" + gh.repo, { headers: authed });
+        })
+        .then(function (r) {
+          if (r.status === 404) {
+            report.repoAccess = "读不到（404）：仓库名写错，或 Token 未授权该仓库";
+            report.ok = false;
+            report.reason = report.repoAccess;
+            return report;
+          }
+          if (!r.ok) return r.text().then(function (t) { throw new Error(parseGitHubError(r.status, t)); });
+          return r.json();
+        })
+        .then(function (repo) {
+          if (repo && repo.permissions) {
+            report.canWrite = repo.permissions.push ? "可写（push 权限已授予）" : "只读（没有 push 权限，发布会被拒）";
+          } else {
+            report.canWrite = "未知（需要 Contents 写权限）";
+          }
+          report.defaultBranch = repo && repo.default_branch;
+          report.ok = /可写/.test(report.canWrite);
+          if (!report.ok) {
+            report.reason = report.canWrite === "未知（需要 Contents 写权限）"
+              ? "Token 权限信息未知，但可以尝试发布；若报 403/401 请给 Contents 写权限"
+              : report.canWrite;
+          }
+          report.ownerMatch = /^gvbhj111$/i.test(report.user);
+          return report;
+        })
+        .catch(function (e) { return { ok: false, reason: e.message, user: report.user, scopes: report.scopes }; });
+    });
+  }
+
+  /* 统一的请求头 */
+  function headers(token) {
+    var h = { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+    if (token) h["Authorization"] = "Bearer " + token;
+    return h;
+  }
+
   function pushFile(path, content, message) {
     var gh = State.gh;
     return resolveToken().then(function (token) {
       if (!token) throw new Error("未提供 GitHub Token");
       var api = "https://api.github.com/repos/" + gh.owner + "/" + gh.repo + "/contents/" + encodeURIComponent(path).replace(/%2F/g, "/");
-      var headers = { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json", "Content-Type": "application/json" };
-      return fetch(api + "?ref=" + encodeURIComponent(gh.branch), { headers: headers })
-        .then(function (r) { return r.status === 200 ? r.json() : (r.status === 404 ? null : Promise.reject(new Error("读取失败 HTTP " + r.status))); })
+      var h = headers(token);
+      h["Content-Type"] = "application/json";
+      return fetch(api + "?ref=" + encodeURIComponent(gh.branch), { headers: h })
+        .then(function (r) {
+          if (r.status === 200) return r.json();
+          if (r.status === 404) return null;                 // 远端还没有这个文件
+          return r.text().then(function (t) { throw new Error(parseGitHubError(r.status, t)); });
+        })
         .then(function (info) {
           var body = { message: message || gh.message, content: b64(content), branch: gh.branch };
           if (info && info.sha) body.sha = info.sha;
-          return fetch(api, { method: "PUT", headers: headers, body: JSON.stringify(body) });
+          return fetch(api, { method: "PUT", headers: h, body: JSON.stringify(body) });
         })
         .then(function (r) {
-          if (!r.ok) return r.text().then(function (t) { throw new Error("推送失败 HTTP " + r.status + " " + t.slice(0, 200)); });
+          if (!r.ok) return r.text().then(function (t) { throw new Error(parseGitHubError(r.status, t)); });
           return r.json();
         })
         .then(function (j) {
@@ -206,6 +294,8 @@
     buildFeedJson: buildFeedJson,
     buildSiteData: buildSiteData,
     pushFile: pushFile,
-    resolveToken: resolveToken
+    resolveToken: resolveToken,
+    checkToken: checkToken,
+    parseGitHubError: parseGitHubError
   };
 })(window);

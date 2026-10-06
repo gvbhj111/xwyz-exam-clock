@@ -634,7 +634,10 @@
             <button class="ghost" id="decryptFillToken"><i class="fa-solid fa-unlock"></i> 解密填充</button>
             <button class="ghost" id="toggleTokenVisibility"><i class="fa-solid fa-eye"></i> 显示 / 隐藏 Token</button>
             <button class="ghost" id="clearEncryptedToken"><i class="fa-solid fa-trash"></i> 清除本机密文</button>
+            <button class="primary" id="checkTokenBtn"><i class="fa-solid fa-stethoscope"></i> 体检 Token</button>
           </div>
+          <p class="dim" id="tokenCheckResult">提示：发布前先点「体检 Token」，会告诉你这个 Token 是谁的、能不能写这个仓库，
+            避免提交到一半报 401。</p>
           <p class="dim">Token 仅保存在本机 localStorage，使用 AES-GCM + PBKDF2 加密；刷新页面后可用口令解密。</p>
         </div>
 

@@ -576,6 +576,29 @@
     });
 
     on("pushSelected", "onclick", function () { publish(UI.selectedFiles()); });
+    /* Token 体检：先查清 401/403 到底是哪一步的问题 */
+    on("checkTokenBtn", "onclick", function () {
+      var gh = St.state.gh;
+      gh.owner = ($("ghOwner") && $("ghOwner").value.trim()) || gh.owner;
+      gh.repo = ($("ghRepo") && $("ghRepo").value.trim()) || gh.repo;
+      gh.branch = ($("ghBranch") && $("ghBranch").value.trim()) || gh.branch;
+      St.save();
+      var box = $("tokenCheckResult");
+      if (box) box.innerHTML = "正在检查…";
+      log("开始检查 Token 与仓库权限…");
+      St.checkToken().then(function (r) {
+        var lines = [];
+        lines.push("账号：" + (r.user || "未知") + (r.ownerMatch === false ? "（注意：与仓库所有者不一致）" : ""));
+        if (r.scopes) lines.push("Classic Token 权限范围：" + (r.scopes || "（空，fine-grained Token 属正常）"));
+        lines.push("仓库：" + gh.owner + "/" + gh.repo + " · " + (r.defaultBranch || gh.branch));
+        lines.push("内容写入权限：" + (r.canWrite || "未知"));
+        lines.push(r.ok ? '<span class="ok">结论：可以发布</span>' : '<span class="err">结论：' + U.esc(r.reason || "不可发布") + "</span>");
+        var html = lines.map(function (l) { return "<div>" + l + "</div>"; }).join("");
+        if (box) box.innerHTML = html;
+        log("Token 体检：" + (r.ok ? "通过" : "未通过 - " + (r.reason || "")) + "；账号 " + (r.user || "?"));
+        U.toast(r.ok ? "Token 可用，可以发布" : "Token 检查未通过：" + (r.reason || ""), r.ok ? "" : "err");
+      });
+    });
     on("downloadSelected", "onclick", function () {
       UI.selectedFiles().forEach(function (path) {
         var f = St.FILES.filter(function (x) { return x.file === path; })[0];
@@ -701,24 +724,36 @@
       St.save();
       syncFeedStore(token);
       log("开始推送到 " + gh.owner + "/" + gh.repo + "@" + gh.branch);
-      var seq = Promise.resolve();
-      paths.forEach(function (path) {
-        seq = seq.then(function () {
-          var f = St.FILES.filter(function (x) { return x.file === path; })[0];
-          if (!f) { log("跳过未知文件：" + path); failed++; return; }
-          var content = St.buildOne(f);
-          if (f.needsEdit && !content) { log("跳过空文件：" + path + "（先在“考试数据”里载入 exam.js 并保存）"); failed++; return; }
-          log("正在提交 " + path + " …");
-          return St.pushFile(path, content, gh.message + " (" + path + ")").then(function (sha) {
-            pushed++;
-            log("✓ " + path + " 已提交 " + String(sha).slice(0, 8));
-          }).catch(function (e) {
-            failed++;
-            log("✗ " + path + " 失败：" + e.message);
+      // 先体检一次：Token 无效/没权限时直接给出结论，不再逐个文件报 401
+      return St.checkToken().then(function (info) {
+        if (!info || !info.ok) {
+          log("发布中止：Token 体检未通过 —— " + ((info && info.reason) || "未知原因"));
+          U.toast("Token 检查未通过：" + ((info && info.reason) || ""), "err");
+          if ($("tokenCheckResult")) {
+            $("tokenCheckResult").innerHTML = '<span class="err">发布已中止：' + U.esc((info && info.reason) || "Token 不可用") + "</span>";
+          }
+          return;
+        }
+        log("Token 体检通过（账号 " + info.user + "，" + info.canWrite + "）");
+        var seq = Promise.resolve();
+        paths.forEach(function (path) {
+          seq = seq.then(function () {
+            var f = St.FILES.filter(function (x) { return x.file === path; })[0];
+            if (!f) { log("跳过未知文件：" + path); failed++; return; }
+            var content = St.buildOne(f);
+            if (f.needsEdit && !content) { log("跳过空文件：" + path + "（先在“考试数据”里载入 exam.js 并保存）"); failed++; return; }
+            log("正在提交 " + path + " …");
+            return St.pushFile(path, content, gh.message + " (" + path + ")").then(function (sha) {
+              pushed++;
+              log("✓ " + path + " 已提交 " + String(sha).slice(0, 8));
+            }).catch(function (e) {
+              failed++;
+              log("✗ " + path + " 失败：" + e.message);
+            });
           });
         });
+        return seq;
       });
-      return seq;
     });
     chain.then(function () {
       log("发布流程结束：成功 " + pushed + " 个，失败 " + failed + " 个");
