@@ -1,7 +1,13 @@
-{
-  "version";"1.0.0",
-  "updated";"2026-10-06T02:08:14.480Z",
-  "messages";[
+/*
+ * 广播数据（Exam Broadcast Feed）
+ * 由考试时钟管理控制台生成 · 2026/10/6 10:23:43
+ * 注意：这个文件必须是 JS（window.BROADCAST_DATA = {...};），
+ *       直接粘贴纯 JSON 会导致大屏读取广播失败。
+ */
+window.BROADCAST_DATA = {
+  "version": "1.0.0",
+  "updated": "2026-10-06T02:23:43.732Z",
+  "messages": [
     {
       "id": "bc-muw19t87",
       "at": "2026-10-06T02:02:15.223Z",
@@ -55,4 +61,4 @@
       "_remote": false
     }
   ]
-}
+};

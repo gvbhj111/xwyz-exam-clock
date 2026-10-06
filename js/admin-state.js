@@ -47,10 +47,21 @@
 
   /* ------------------------------------------------------------ 载入 */
   function load() {
-    // 背景
+    // 背景：以脚本文件里的定义为基线，用本机修改覆盖；
+    // 关键：本机没有、但文件里有的来源要补回来，
+    // 否则"发布"会把新增的内置来源（必应/视频等）覆盖丢失。
     var base = global.BG_DATA || { settings: {}, items: [] };
     var localBg = U.lsGet(LS.bg, null);
-    State.bg = { settings: U.merge(base.settings, localBg && localBg.settings), items: (localBg && localBg.items) || U.deepCopy(base.items) };
+    var localItems = (localBg && localBg.items) || null;
+    var merged = U.deepCopy(base.items || []);
+    if (localItems) {
+      localItems.forEach(function (li) {
+        var idx = merged.findIndex(function (b) { return b.id === li.id; });
+        if (idx >= 0) merged[idx] = U.merge(merged[idx], li);
+        else merged.push(li);           // 你新增的来源
+      });
+    }
+    State.bg = { settings: U.merge(base.settings, localBg && localBg.settings), items: merged };
     // 补全内置来源的动态字段
     State.bg.items.forEach(function (it) {
       var src = (base.items || []).filter(function (b) { return b.id === it.id; })[0];
@@ -59,6 +70,8 @@
         if (src.topics && !it.topics) it.topics = src.topics;
         if (src.suffix != null && it.suffix == null) it.suffix = src.suffix;
         if (src.base && !it.base) it.base = src.base;
+        if (src.fallback && !(it.fallback && it.fallback.length)) it.fallback = src.fallback;
+        if (src.list && src.list.length && !(it.list && it.list.length)) it.list = src.list;
       }
       if (it.enabled == null) it.enabled = true;
     });

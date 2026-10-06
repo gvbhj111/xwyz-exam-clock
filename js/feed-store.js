@@ -74,12 +74,11 @@
       this.config = this.mergeConfig(global.BROADCAST_CONFIG || {}, readJSON(LS.config, null));
       this.remoteUrl = url.get("feed") || this.config.feedUrl || readJSON(LS.remote, "") || "";
       this.messages = (readJSON(LS.feed, []) || []).map(normalizeMessage).filter(Boolean);
-      var statics = (global.BROADCAST_DATA && global.BROADCAST_DATA.messages) || [];
-      statics.forEach(function (m) {
-        var n = normalizeMessage(m);
-        if (n && !Store.messages.some(function (x) { return x.id === n.id; })) Store.messages.push(n);
-      });
       this.messages.sort(function (a, b) { return new Date(a.at || 0) - new Date(b.at || 0); });
+
+      // 内置广播数据（可选）：data/feed.json.js 里可能被手改坏，
+      // 这里做容错 —— 取不到就改用 JSON 版 data/feed.json
+      this.initEmbedded();
 
       try {
         if (global.BroadcastChannel) {
@@ -93,6 +92,59 @@
         }
       } catch (e) { }
       return this;
+    },
+
+    /* 兼容两种广播源路径：data/feed.json.js（window.BROADCAST_DATA）/ data/feed.json */
+    initEmbedded: function () {
+      var self = this;
+      var statics = (global.BROADCAST_DATA && global.BROADCAST_DATA.messages) || [];
+      if (statics.length) {
+        this.mergeStatic(statics);
+        this.embedSource = "data/feed.json.js";
+        return Promise.resolve(true);
+      }
+      console.warn("[broadcast] data/feed.json.js 没有提供 window.BROADCAST_DATA（可能被改坏或只是纯 JSON），改用 data/feed.json");
+      return this.fetchFeedFile("data/feed.json").then(function (ok) {
+        self.embedSource = ok ? "data/feed.json" : "";
+        return ok;
+      });
+    },
+
+    /* 拉取并解析站点目录下的 JSON 广播数据（带时间戳防缓存） */
+    fetchFeedFile: function (path) {
+      var self = this;
+      if (!global.fetch) return Promise.resolve(false);
+      var url = path + (path.indexOf("?") >= 0 ? "&" : "?") + "t=" + now();
+      return fetch(url, { cache: "no-store" })
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (json) {
+          var list = json && (json.messages || (Array.isArray(json) ? json : null));
+          if (!list) throw new Error("内容不是合法的广播数据");
+          self.mergeStatic(list);
+          self.emit();
+          console.log("%c[broadcast] 已从 " + path + " 载入 " + list.length + " 条广播", "color:#3a9");
+          return true;
+        })
+        .catch(function (e) {
+          console.warn("[broadcast] 读取 " + path + " 失败：" + (e.message || e));
+          return false;
+        });
+    },
+
+    /* 把内置广播合并进本地队列（同 id 去重） */
+    mergeStatic: function (list) {
+      var self = this;
+      (list || []).forEach(function (m) {
+        var n = normalizeMessage(m);
+        if (!n) return;
+        var idx = self.messages.findIndex(function (x) { return x.id === n.id; });
+        if (idx >= 0) self.messages[idx] = n;
+        else self.messages.push(n);
+      });
+      this.messages.sort(function (a, b) { return new Date(a.at || 0) - new Date(b.at || 0); });
     },
 
     mergeConfig: function (base, override) {

@@ -1,9 +1,17 @@
 /*
  * 背景数据源配置（Background Data）
- * 由考试时钟管理控制台生成 · 2026/10/6 10:03:25
- * 后台可视化编辑生成，可直接手工修改。
+ * ------------------------------------------------------------------
+ * 本文件是"自定义背景轮播"的数据层，纯静态、无依赖，
+ * 可直接被 GitHub Pages / Netlify / 任意静态服务器托管。
+ *
+ * 来源类型：gallery | static | bing | online | local | gradient | solid | video | custom
+ * 注意：用后台"发布"覆盖本文件时，请确认来源列表没有变少
+ *       （后台会自动合并内置来源，避免越发布越少）。
+ * ------------------------------------------------------------------
  */
 window.BG_DATA = {
+  "version": "1.0.0",
+  "updated": "2026-10-06",
   "settings": {
     "enabled": true,
     "intervalSeconds": 120,
@@ -119,6 +127,37 @@ window.BG_DATA = {
       "enabled": true
     },
     {
+      "id": "bing",
+      "type": "bing",
+      "name": "必应每日壁纸",
+      "weight": 6,
+      "api": "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=zh-CN",
+      "base": "https://cn.bing.com",
+      "cacheMinutes": 180,
+      "fallback": [
+        {
+          "author": "Bing",
+          "name": "每日壁纸 A",
+          "url": "https://cn.bing.com/th?id=OHR.BlueCanyon_ZH-CN6846889594_1920x1080.jpg"
+        },
+        {
+          "author": "Bing",
+          "name": "每日壁纸 B",
+          "url": "https://cn.bing.com/th?id=OHR.GreatBarrierReef_ZH-CN4572073279_1920x1080.jpg"
+        },
+        {
+          "author": "Bing",
+          "name": "每日壁纸 C",
+          "url": "https://cn.bing.com/th?id=OHR.MontBlanc_ZH-CN9505161127_1920x1080.jpg"
+        },
+        {
+          "author": "Bing",
+          "name": "每日壁纸 D",
+          "url": "https://cn.bing.com/th?id=OHR.SnowyHills_ZH-CN5560284453_1920x1080.jpg"
+        }
+      ]
+    },
+    {
       "id": "gradient",
       "type": "gradient",
       "name": "内置渐变",
@@ -182,6 +221,27 @@ window.BG_DATA = {
       "enabled": true
     },
     {
+      "id": "video",
+      "type": "video",
+      "name": "动态视频",
+      "weight": 2,
+      "list": [
+        {
+          "author": "Google",
+          "name": "云海延时",
+          "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+          "poster": ""
+        }
+      ]
+    },
+    {
+      "id": "local-repo",
+      "type": "local",
+      "name": "仓库图片（./images/）",
+      "weight": 3,
+      "list": []
+    },
+    {
       "id": "local-user",
       "type": "local",
       "name": "我的收藏（浏览器本地）",
@@ -189,6 +249,5 @@ window.BG_DATA = {
       "list": [],
       "enabled": true
     }
-  ],
-  "updated": "2026-10-06"
+  ]
 };

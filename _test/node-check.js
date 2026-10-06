@@ -324,8 +324,9 @@ chk("播报记录已写入", win.Broadcast.history().length > 0, win.Broadcast.h
 /* 广播数据源 */
 const sent = win.FeedStore.send({ id: "t1", text: "自检广播", level: "important", voice: "自检广播" });
 chk("FeedStore.send 成功", !!sent);
-chk("消息列表长度", win.FeedStore.messages.length === 1, win.FeedStore.messages.length);
-chk("active() 过滤", win.FeedStore.active().length === 1, win.FeedStore.active().length);
+chk("发送的广播已在队列中", win.FeedStore.messages.filter(m => m.id === "t1").length === 1, "队列共 " + win.FeedStore.messages.length + " 条");
+chk("active() 能取到该广播", win.FeedStore.active().some(m => m.id === "t1"), win.FeedStore.active().length + " 条生效");
+chk("内置广播数据已合并", win.FeedStore.messages.length >= (win.BROADCAST_DATA.messages || []).length, win.FeedStore.messages.length + " 条");
 chk("localStorage 已持久化", !!store.get("examclock.broadcast.feed.v1"));
 
 /* 配置持久化 + 规则引擎 */
