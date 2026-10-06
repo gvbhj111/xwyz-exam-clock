@@ -1,20 +1,19 @@
 /*
  * 广播数据（Exam Broadcast Feed）
- * 由考试时钟管理控制台生成 · 2026/10/6 10:23:43
- * 注意：这个文件必须是 JS（window.BROADCAST_DATA = {...};），
- *       直接粘贴纯 JSON 会导致大屏读取广播失败。
+ * 由考试时钟管理控制台生成 · 2026/10/6 10:36:40
+ * 由管理控制台生成，勿手工改 id。
  */
 window.BROADCAST_DATA = {
   "version": "1.0.0",
-  "updated": "2026-10-06T02:23:43.732Z",
+  "updated": "2026-10-06T02:36:40.621Z",
   "messages": [
     {
-      "id": "bc-muw19t87",
-      "at": "2026-10-06T02:02:15.223Z",
+      "id": "bc-muw2ay7u",
+      "at": "2026-10-06T02:31:07.962Z",
       "until": "",
-      "level": "notice",
-      "text": "考试期间请保持考场安静，手机等电子设备一律关机并放到指定位置。",
-      "voice": "考试期间请保持考场安静，手机等电子设备一律关机并放到指定位置。",
+      "level": "urgent",
+      "text": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
+      "voice": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
@@ -22,38 +21,25 @@ window.BROADCAST_DATA = {
       "_remote": false
     },
     {
-      "id": "bc-muw1aj4v",
-      "at": "2026-10-06T02:02:48.799Z",
+      "id": "bc-muw2c5sq",
+      "at": "2026-10-06T02:32:04.442Z",
       "until": "",
-      "level": "notice",
+      "level": "urgent",
+      "text": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
+      "voice": "请监考老师核对答题卡、试卷份数，考生按座位号就座，考试即将开始。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muw2g93o",
+      "at": "2026-10-06T02:35:15.348Z",
+      "until": "",
+      "level": "urgent",
       "text": "距离考试结束还有 15 分钟，请注意把握答题时间。",
       "voice": "距离考试结束还有 15 分钟，请注意把握答题时间。",
-      "announce": "",
-      "pin": false,
-      "source": "管理控制台",
-      "repeatEveryMinutes": 0,
-      "_remote": false
-    },
-    {
-      "id": "bc-muw1ebqc",
-      "at": "2026-10-06T02:05:45.828Z",
-      "until": "",
-      "level": "notice",
-      "text": "因临时安排调整，本场考试时间变更为 XX:XX—XX:XX，请以广播为准。",
-      "voice": "因临时安排调整，本场考试时间变更为 XX:XX—XX:XX，请以广播为准。",
-      "announce": "",
-      "pin": false,
-      "source": "管理控制台",
-      "repeatEveryMinutes": 0,
-      "_remote": false
-    },
-    {
-      "id": "bc-muw1fhol",
-      "at": "2026-10-06T02:06:40.197Z",
-      "until": "",
-      "level": "notice",
-      "text": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
-      "voice": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
