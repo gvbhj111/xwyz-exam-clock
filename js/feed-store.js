@@ -127,8 +127,32 @@
       return this.remoteUrl;
     },
 
+    /*
+     * 广播源地址：
+     *   默认用仓库内置的 ./data/feed.json（随"发布"一起更新，零配置）
+     *   也支持填 GitHub Contents API 地址或任意 JSON 地址
+     */
     getFeedUrl: function () {
-      return this.remoteUrl || (this.config && this.config.feedUrl) || "";
+      var url = this.remoteUrl || (this.config && this.config.feedUrl) || "";
+      if (url) return url;
+      return "data/feed.json";
+    },
+
+    /* 是否应该把广播写回 GitHub（需要 Token；或用显式配置的 Contents API 地址） */
+    canPushGitHub: function () {
+      var token = (this.config.ghToken || "").trim();
+      if (!token) return false;
+      return !!(this.config.ghOwner && this.config.ghRepo);
+    },
+
+    /* 拼接 GitHub Contents API 地址：优先用配置的 URL，否则用 owner/repo + feedPath */
+    gitHubApiUrl: function () {
+      var u = this.getFeedUrl();
+      if (/api\.github\.com\/repos\//.test(u)) return u.split("?")[0];
+      var owner = this.config.ghOwner, repo = this.config.ghRepo;
+      if (!owner || !repo) return "";
+      var p = (this.config.feedPath || "data/feed.json").replace(/^\//, "");
+      return "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + p;
     },
 
     /* ---------------------------------------------------------- 广播列表 */
@@ -220,9 +244,10 @@
 
     /* 把本地广播推回远程（GitHub Contents API） */
     pushRemote: function () {
-      var url = this.getFeedUrl();
+      var url = this.gitHubApiUrl();
       var token = (this.config.ghToken || "").trim();
-      if (!url || !token) return Promise.reject(new Error("未配置远程广播源或 Token"));
+      if (!token) return Promise.reject(new Error("请先在「发布」页填写 GitHub Token"));
+      if (!url) return Promise.reject(new Error("未配置仓库信息（所有者/仓库名）"));
       var m = /api\.github\.com\/repos\/([^/]+)\/([^/]+)\/contents\/(.+?)(\?|$)/.exec(url);
       if (!m) return Promise.reject(new Error("仅支持 GitHub Contents API 地址"));
       var owner = m[1], repo = m[2], path = decodeURIComponent(m[3]);

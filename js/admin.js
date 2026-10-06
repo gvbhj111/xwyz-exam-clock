@@ -141,6 +141,7 @@
       bgEnabled: ["enabled", function (v) { return v === "1"; }],
       bgInterval: ["intervalSeconds", Number],
       bgOrder: ["order", String],
+      bgWeightMode: ["weightMode", String],
       bgTransitionMs: ["transitionMs", Number],
       bgEffect: ["effect", String],
       bgDarken: ["darken", Number],
@@ -303,10 +304,40 @@
     on("bcSaveFeed", "onclick", function () {
       var fs = global.FeedStore;
       fs.setFeedUrl($("bcFeedUrl").value);
-      St.state.br.feedBranch = $("bcFeedBranch").value.trim() || "main";
+      St.state.br.feedUrl = $("bcFeedUrl").value.trim();
+      St.state.gh.feedPath = ($("bcFeedPath") && $("bcFeedPath").value.trim()) || "data/feed.json";
+      St.state.br.feedBranch = ($("bcFeedBranch") && $("bcFeedBranch").value.trim()) || "main";
       St.save();
-      log("广播源已保存：" + fs.getFeedUrl());
-      U.toast("已保存广播源配置");
+      St.markDirty("js/broadcast-data.js");
+      log("广播源设置已保存：路径 " + St.state.gh.feedPath +
+        (St.state.br.feedUrl ? "，自定义地址 " + St.state.br.feedUrl : "（使用仓库内置文件）"));
+      UI.renderBroadcast();
+      U.toast("广播源设置已保存");
+    });
+
+    /* 一键把广播发布到仓库内置的 data/feed.json */
+    on("bcPublish", "onclick", function () {
+      St.state.gh.feedPath = ($("bcFeedPath") && $("bcFeedPath").value.trim()) || St.state.gh.feedPath || "data/feed.json";
+      St.save();
+      log("正在把广播发布到 " + St.state.gh.owner + "/" + St.state.gh.repo + "/" + St.state.gh.feedPath + " …");
+      U.toast("正在发布广播…");
+      St.resolveToken().then(function (token) {
+        if (!token) { log("广播发布中止：缺少 GitHub Token"); U.toast("请先在「发布」页填写 GitHub Token", "err"); return; }
+        St.state.gh.token = token;
+        St.save();
+        syncFeedStore(token);
+        return global.FeedStore.pushRemote();
+      }).then(function (r) {
+        if (!r) return;
+        log("广播已发布到仓库：" + ((r.commit && r.commit.sha) || "ok"));
+        U.toast("广播已发布，其它大屏会自动同步");
+        St.markDirty("data/feed.json.js");
+        St.markDirty("data/feed.json");
+        UI.renderBroadcast();
+      }).catch(function (e) {
+        log("广播发布失败：" + e.message);
+        U.toast("广播发布失败：" + e.message, "err");
+      });
     });
     on("bcPull", "onclick", function () {
       global.FeedStore.fetchRemote().then(function (ok) {
@@ -362,6 +393,70 @@
       if (global.Broadcast) global.Broadcast.test("important");
     });
 
+    /* ---- 自定义播报音频 ---- */
+    on("audioFile", "onchange", function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      if (!/^audio\//.test(f.type) && !/\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(f.name)) {
+        U.toast("请选择音频文件（mp3 / wav / ogg / m4a）", "err");
+        return;
+      }
+      var kb = Math.round(f.size / 1024);
+      U.readFileAsDataURL(f).then(function (dataUrl) {
+        St.state.br.settings.customAudio = dataUrl;
+        St.state.br.settings.customAudioName = f.name + "（" + kb + " KB）";
+        St.save();
+        St.markDirty("js/broadcast-data.js");
+        if (global.FeedStore) global.FeedStore.setConfig(St.state.br, true);
+        UI.renderAudioStatus();
+        log("已载入自定义播报音频：" + f.name + "（" + kb + " KB）");
+        U.toast(kb > 300 ? "音频已载入（" + kb + " KB，建议压缩到 300KB 以内）" : "音频已载入，可点「试听」");
+        if (this) this.value = "";
+      }, this).catch(function (e) { U.toast("读取音频失败：" + e.message, "err"); });
+    });
+    on("audioTest", "onclick", function () {
+      St.state.br = UI.collectRules();
+      St.save();
+      if (global.FeedStore) global.FeedStore.setConfig(St.state.br, true);
+      var has = !!(St.state.br.settings.customAudio || St.state.br.settings.chimeFile);
+      if (global.Broadcast && global.Broadcast.testAudio) {
+        global.Broadcast.testAudio().then(function () {
+          log(has ? "已试听自定义播报音频" : "当前没有自定义音频，已播放内置合成提示音");
+        });
+      }
+      U.toast(has ? "正在播放自定义音频" : "没有自定义音频，播放的是内置提示音");
+    });
+    on("audioClear", "onclick", function () {
+      St.state.br.settings.customAudio = "";
+      St.state.br.settings.customAudioName = "";
+      St.save();
+      St.markDirty("js/broadcast-data.js");
+      if (global.FeedStore) global.FeedStore.setConfig(St.state.br, true);
+      UI.renderAudioStatus();
+      log("已清除自定义播报音频");
+      U.toast("已清除自定义音频，恢复内置提示音");
+    });
+    on("audioUrlSet", "onclick", function () {
+      U.modal({
+        title: "用音频网址",
+        html: '<p class="dim">填一个可公开访问的音频地址（mp3 / wav / ogg），换设备也能用。</p>' +
+          '<label>音频地址<input type="text" id="mAudioUrl" placeholder="https://example.com/ding.mp3"></label>',
+        onOk: function () {
+          var u = $("mAudioUrl").value.trim();
+          if (!u) { U.toast("请填写音频地址", "err"); return null; }
+          St.state.br.settings.customAudio = u;
+          St.state.br.settings.customAudioName = u.split("/").pop();
+          St.save();
+          St.markDirty("js/broadcast-data.js");
+          if (global.FeedStore) global.FeedStore.setConfig(St.state.br, true);
+          UI.renderAudioStatus();
+          log("自定义播报音频已设为网址：" + u);
+          U.toast("已设置音频网址");
+          return true;
+        }
+      });
+    });
+
     /* ---- 逐场考试自动播报开关 ---- */
     on("exAllOn", "onclick", function () { UI.setAllMuted(false); });
     on("exAllOff", "onclick", function () { UI.setAllMuted(true); });
@@ -381,6 +476,20 @@
 
     /* ---- 考试数据 ---- */
     on("loadExam", "onclick", UI.loadExamText);
+    on("saveExam", "onclick", function () { saveExamDraft(true); });
+    on("publishExam", "onclick", function () {
+      if (!saveExamDraft(false)) return;
+      publish(["js/exam.js"]);
+    });
+    // 编辑时自动存草稿（防手滑关页面）
+    var examEd = $("examEditor");
+    if (examEd) {
+      var draftTimer = null;
+      examEd.addEventListener("input", function () {
+        clearTimeout(draftTimer);
+        draftTimer = setTimeout(function () { saveExamDraft(false); }, 1200);
+      });
+    }
     on("downloadExam", "onclick", function () {
       U.download("exam.js", $("examEditor").value || St.state.examSource || "");
       log("已下载 exam.js");
@@ -393,22 +502,7 @@
       St.save();
       log("已做简单格式化（去空行、去行尾空格）");
     });
-    on("checkExam", "onclick", function () {
-      var v = $("examEditor").value;
-      St.state.examSource = v;
-      St.save();
-      var types = UI.collectExamTypes(v);
-      if (types) {
-        St.state.examTypes = types;
-        St.state.draftMuted = null;
-        UI.renderExamTable(types);
-        UI.renderExamToggle();
-        $("examHint").innerHTML = '<span class="ok">语法正常，共 ' + types.length + " 个考试类型</span>";
-        log("exam.js 语法检查通过，共 " + types.length + " 个类型");
-      } else {
-        log("exam.js 语法检查失败");
-      }
-    });
+    on("checkExam", "onclick", function () { saveExamDraft(true); });
     on("examFile", "onchange", function () {
       var f = this.files && this.files[0];
       if (!f) return;
@@ -508,6 +602,46 @@
     var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
   }
 
+  /*
+   * 保存考试数据草稿。
+   * 原来点了"语法检查"只是校验、不落盘，用户会以为"改了没法保存"，
+   * 这里统一：写入本机草稿 + 语法检查 + 给出明确回执。
+   */
+  function saveExamDraft(verbose) {
+    var ed = $("examEditor");
+    if (!ed) return false;
+    var v = ed.value;
+    if (!v.trim()) {
+      log("保存中止：编辑器是空的");
+      if (verbose) U.toast("编辑器为空，先点「加载当前 exam.js」", "err");
+      return false;
+    }
+    St.state.examSource = v;
+    St.save();
+    St.markDirty("js/exam.js");
+    var types = UI.collectExamTypes(v);
+    if (types) {
+      St.state.examTypes = types;
+      St.state.draftMuted = null;
+      UI.renderExamTable(types);
+      UI.renderExamToggle();
+      var t = new Date().toLocaleTimeString();
+      if ($("examHint")) {
+        $("examHint").innerHTML = '<span class="ok">已保存草稿（' + t + "）· 解析出 " + types.length +
+          " 个考试类型 · 点「保存并发布到仓库」即可更新线上</span>";
+      }
+      log("考试数据已保存草稿：" + v.length + " 字符，" + types.length + " 个考试类型");
+      if (verbose) U.toast("已保存修改（" + types.length + " 个考试类型），可继续「保存并发布到仓库」");
+      UI.renderPublish();
+      return true;
+    }
+    // 语法有问题时仍然保存草稿，但不阻断（避免丢数据）
+    log("考试数据已存为草稿，但语法检查未通过，请检查后再发布");
+    if ($("examHint")) $("examHint").innerHTML = '<span class="err">草稿已保存，但 exam.js 语法未通过，请修复后再发布</span>';
+    if (verbose) U.toast("草稿已保存，但语法有误，请修复后再发布", "err");
+    return false;
+  }
+
   function collectPreviewPool() {
     var out = [];
     if (!St.state.bg || !St.state.bg.settings) return out;
@@ -527,44 +661,70 @@
     return out;
   }
 
+  /* 把仓库信息同步给广播数据源（用于把广播推回仓库内置的 data/feed.json） */
+  function syncFeedStore(token) {
+    if (!global.FeedStore || !global.FeedStore.setConfig) return;
+    var gh = St.state.gh;
+    var cfg = global.FeedStore.getConfig();
+    cfg.ghOwner = gh.owner;
+    cfg.ghRepo = gh.repo;
+    cfg.ghToken = token || gh.token || "";
+    cfg.feedPath = gh.feedPath || "data/feed.json";
+    cfg.feedBranch = gh.branch || "main";
+    global.FeedStore.setConfig(cfg, true);
+  }
+
   /* ------------------------------------------------------------ 发布 */
   function publish(paths) {
-    if (!paths || !paths.length) { U.toast("请先选择要发布的文件", "err"); return; }
+    // 无论成功失败，先给出即时反馈（避免"点了没反应"）
+    if (!paths || !paths.length) {
+      log("发布中止：没有勾选任何文件");
+      U.toast("没有勾选文件：请在表格左侧勾选要发布的文件", "err");
+      return;
+    }
     var gh = St.state.gh;
     gh.owner = ($("ghOwner") && $("ghOwner").value.trim()) || gh.owner;
     gh.repo = ($("ghRepo") && $("ghRepo").value.trim()) || gh.repo;
     gh.branch = ($("ghBranch") && $("ghBranch").value.trim()) || gh.branch;
     gh.message = ($("ghMessage") && $("ghMessage").value.trim()) || gh.message;
     St.save();
+    log("准备发布 " + paths.length + " 个文件：" + paths.join("、"));
 
-    St.resolveToken().then(function (token) {
+    var pushed = 0, failed = 0;
+    var chain = St.resolveToken().then(function (token) {
       if (!token) {
-        log("发布中止：缺少 Token（请在上方填写 GitHub Token）");
+        log("发布中止：缺少 Token（在「发布」页填入 GitHub Token 并保存）");
         U.toast("请先填写 GitHub Token", "err");
         return;
       }
       St.state.gh.token = token;
-      log("开始发布 " + paths.length + " 个文件到 " + gh.owner + "/" + gh.repo + "@" + gh.branch);
-      var chain = Promise.resolve();
+      St.save();
+      syncFeedStore(token);
+      log("开始推送到 " + gh.owner + "/" + gh.repo + "@" + gh.branch);
+      var seq = Promise.resolve();
       paths.forEach(function (path) {
-        chain = chain.then(function () {
+        seq = seq.then(function () {
           var f = St.FILES.filter(function (x) { return x.file === path; })[0];
-          if (!f) { log("跳过未知文件：" + path); return; }
+          if (!f) { log("跳过未知文件：" + path); failed++; return; }
           var content = St.buildOne(f);
-          if (f.needsEdit && !content) { log("跳过空文件：" + path + "（请先在“考试数据”里加载 exam.js）"); return; }
+          if (f.needsEdit && !content) { log("跳过空文件：" + path + "（先在“考试数据”里载入 exam.js 并保存）"); failed++; return; }
           log("正在提交 " + path + " …");
           return St.pushFile(path, content, gh.message + " (" + path + ")").then(function (sha) {
+            pushed++;
             log("✓ " + path + " 已提交 " + String(sha).slice(0, 8));
           }).catch(function (e) {
+            failed++;
             log("✗ " + path + " 失败：" + e.message);
           });
         });
       });
-      return chain;
-    }).then(function () {
-      log("发布流程结束");
+      return seq;
+    });
+    chain.then(function () {
+      log("发布流程结束：成功 " + pushed + " 个，失败 " + failed + " 个");
       UI.renderPublish();
-      U.toast("发布流程结束，详见日志");
+      U.toast(failed ? ("发布结束：成功 " + pushed + " / 失败 " + failed + "，详见日志") : ("发布成功：" + pushed + " 个文件"),
+        failed ? "err" : "");
     }).catch(function (e) {
       log("发布异常：" + e.message);
       U.toast("发布失败：" + e.message, "err");

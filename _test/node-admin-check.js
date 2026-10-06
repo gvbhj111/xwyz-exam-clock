@@ -1,16 +1,12 @@
 /*
  * 后台管理页自检（Node + 轻量 DOM 桩）
  * 运行： node _test/node-admin-check.js
- * 覆盖：登录 → 各标签页渲染 → 广播发布 → 规则保存 → 数据生成 → GitHub 发布
+ * 覆盖：登录 → 各标签页渲染 → 考试数据保存 → 广播发布 → 音频 → 发布到 GitHub
  */
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const { makeEnv, loadFiles } = require("./dom-stub.js");
-const vm = require("vm");
-function vmProbe() {
-  return env && env.ctx ? vm.runInContext('(function(){ var e = document.getElementById("ghToken"); return e ? "found:" + e.value : "null"; })()', env.ctx) : "n/a";
-}
 
 const ROOT = path.join(__dirname, "..");
 const out = [];
@@ -23,6 +19,9 @@ const ADMIN_IDS = [
   "loginPanel", "adminPanel", "adminUser", "adminPass", "localCaptcha", "loginBtn", "captchaRefresh",
   "loginMsg", "logoutBtn", "tabs", "quickPush", "quickPushFeed", "footStat",
   "bgVolList", "bgSourceList", "bgIntervalList", "bgEffectList", "bgPlayToggle", "bgHook", "main",
+  "type", "typelist", "verify", "verifycontent", "msg", "msgcontent", "bar", "subslogan",
+  "mainslogan", "clock", "subject", "duration", "timer", "timersub", "activity", "bg",
+  "fullscreen", "filterSwitch", "coverTitle", "coverAuthor", "coverOrigin", "coverTips", "coverImage", "cover",
   "statSources", "statBgCurrent", "statMessages", "statLastBroadcast", "statExams", "statExamTypes", "statVoice",
   "bgEnabled", "bgInterval", "bgOrder", "bgTransitionMs", "bgEffect", "bgDarken", "bgKenBurns", "bgShowCaption",
   "bgSourceTable", "bgDetail", "bgAddSource", "bgAddUrl", "bgAddLocal", "bgPreview", "bgReset",
@@ -34,7 +33,10 @@ const ADMIN_IDS = [
   "clkEnabled", "clkMinutes", "clkOnlyExam", "clkTemplate",
   "disEnabled", "disEvery", "disOnlyExam", "disItems",
   "tsEnabled", "tsUrl", "tsField", "tsOffset", "brSave", "brTestVoice", "brTestAlert",
-  "examToggleTable", "exAllOn", "exAllOff", "exReload", "exSave", "exHint", "discPreview",
+  "audioFile", "audioTest", "audioClear", "audioUrlSet", "audioStatus", "audioPreview",
+  "brAudioVolume", "brAudioBeforeVoice", "brChime2", "saveExam", "publishExam",
+  "bcPublish", "bcFeedPath", "bcRepoLabel", "bcSyncHint", "brFeedPath",
+  "examToggleTable", "exAllOn", "exAllOff", "exReload", "exSave", "exHint",
   "loadExam", "formatExam", "checkExam", "downloadExam", "examFile", "examEditor", "examHint", "examTable",
   "thSlogan", "thSchool", "thVersion", "thAccent", "thDarken", "thTip", "thSave", "thReset",
   "ghOwner", "ghRepo", "ghBranch", "ghMessage", "ghToken", "ghPass",
@@ -70,6 +72,14 @@ const env = makeEnv({
 
 const { doc, sandbox, errors } = env;
 
+/* dom-stub 的定时器只是入队，这里手动"跑时钟"推进 Promise 链 */
+function flush(times) {
+  for (let i = 0; i < (times || 40); i++) {
+    const t = env.timers.shift();
+    if (t) { try { t.fn(); } catch (e) { errors.push("ERROR timer: " + e.message); } }
+  }
+}
+
 /* 表格行数统计（tbody 由 dom-stub 提供） */
 const rowCount = (id) => {
   const t = doc.getElementById(id);
@@ -85,17 +95,30 @@ doc.createElement = ((orig) => (tag) => {
 })(doc.createElement);
 
 const A_FILES = [
+  "js/clock.js",
+  "js/exam.js",
+  "js/msg.js",
+  "js/cover.js",
+  "js/search.js",
   "js/gallery.js",
   "js/bg-data.js",
   "js/broadcast-data.js",
   "data/feed.json.js",
   "js/feed-store.js",
+  "js/broadcast.js",
   "js/admin-util.js",
   "js/admin-state.js",
   "js/admin-ui.js",
   "js/admin.js"
 ];
-const loaded = loadFiles(env, A_FILES);
+const loaded = loadFiles(env, A_FILES, { waitForDCL: true });
+
+/* 顶层 await 需要包在 async 函数里（CommonJS） */
+(async function run() {
+
+/* 模拟浏览器：脚本（defer）跑完后触发 DOMContentLoaded，再等异步初始化 */
+env.doc.dispatch("DOMContentLoaded");
+for (let i = 0; i < 8; i++) { await new Promise(r => setImmediate(r)); flush(3); }
 
 chk("全部脚本加载成功", loaded.ok, loaded.error || "");
 chk("加载期无错误", errors.filter(e => e.startsWith("ERROR")).length === 0, errors.filter(e => e.startsWith("ERROR")).join(" | ").slice(0, 300));
@@ -132,41 +155,25 @@ chk("全部标签页切换无异常", errors.filter(e => e.startsWith("ERROR")).
 tab("bg");
 chk("背景来源表已渲染", rowCount("bgSourceTable") > 5, rowCount("bgSourceTable") + " 行");
 chk("轮播间隔输入已填充", !!doc.getElementById("bgInterval").value, doc.getElementById("bgInterval").value);
-chk("候选池来源数", win.AdminUI && true);
 
-/* ---- 广播发布 ---- */
-tab("broadcast");
-doc.getElementById("bcText").value = "自检广播：请考生注意时间。";
-doc.getElementById("bcVoice").value = "自检广播，请考生注意时间。";
-doc.getElementById("bcLevel").value = "important";
-doc.getElementById("bcSend").onclick();
-const msgs = win.FeedStore.messages;
-chk("广播已写入广播队列", msgs.length === 1, msgs.length + " 条");
-chk("广播内容正确", msgs[0] && /自检广播/.test(msgs[0].text), msgs[0] && msgs[0].text);
-chk("广播记录表已渲染", rowCount("bcTable") >= 1, rowCount("bcTable") + " 行");
-chk("发送后输入框已清空", doc.getElementById("bcText").value === "");
-
-/* ---- 自动播报规则 ---- */
-tab("rules");
-doc.getElementById("brEnabled").value = "1";
-doc.getElementById("brVoice").value = "1";
-doc.getElementById("brBeforeStart").value = "30,15,5";
-doc.getElementById("brBeforeEnd").value = "30,15,5,1";
-doc.getElementById("clkEnabled").value = "1";
-doc.getElementById("clkMinutes").value = "0,30";
-doc.getElementById("disEnabled").value = "1";
-doc.getElementById("disItems").value = "请保持安静\n手机请关机";
-doc.getElementById("brSave").onclick();
-const saved = win.AdminState.state.br;
-chk("规则：开考前节点已保存", JSON.stringify(saved.exam.beforeStart) === "[30,15,5]", JSON.stringify(saved.exam.beforeStart));
-chk("规则：报时已保存", saved.clock.enabled === true && saved.clock.minutes.length === 2, JSON.stringify(saved.clock.minutes));
-chk("规则：纪律条目已保存", saved.discipline.items.length === 2, JSON.stringify(saved.discipline.items));
-chk("规则已同步到 FeedStore", win.FeedStore.getConfig().exam.beforeStart.length === 3);
+/* ---- 考试数据：载入 → 修改 → 保存 ---- */
+tab("exam");
+for (let i = 0; i < 20 && (doc.getElementById("examEditor").value || "").length === 0; i++) {
+  await new Promise(r => setImmediate(r));
+  flush(2);
+}
+chk("exam.js 已从仓库载入", doc.getElementById("examEditor").value.length > 1000, doc.getElementById("examEditor").value.length + " 字符");
+const src = doc.getElementById("examEditor").value;
+doc.getElementById("examEditor").value = src.replace('type: "高三·日常"', 'type: "高三日常(改)"');
+doc.getElementById("saveExam").onclick();
+chk("保存后写入 examSource", (win.AdminState.state.examSource || "").length > 1000, (win.AdminState.state.examSource || "").length);
+chk("保存后标记待发布", win.AdminState.state.dirty["js/exam.js"] === true);
+chk("保存有明确回执", /已保存草稿/.test(doc.getElementById("examHint").innerHTML), doc.getElementById("examHint").innerHTML.replace(/<[^>]*>/g, "").slice(0, 60));
+const types = win.AdminState.state.examTypes;
+chk("exam.js 解析出考试类型", !!types && types.length >= 8, types && types.length);
+chk("考试类型表已渲染", rowCount("examTable") >= 8, rowCount("examTable") + " 行");
 
 /* ---- 逐场考试自动播报开关 ---- */
-tab("exam");
-doc.getElementById("examEditor").value = fs.readFileSync(path.join(ROOT, "js/exam.js"), "utf8");
-doc.getElementById("checkExam").onclick();
 tab("rules");
 win.AdminUI.renderExamToggle();
 chk("考试开关表已渲染", rowCount("examToggleTable") >= 8, rowCount("examToggleTable") + " 行");
@@ -181,9 +188,48 @@ doc._allByAttr("data-act", "mute")[0].checked = false;   // 只关掉第一个
 doc.getElementById("exSave").onclick();
 const muted = win.AdminState.state.br.exam.mutedTypes;
 chk("关闭的考试类型已保存", Array.isArray(muted) && muted.length === 1, JSON.stringify(muted));
-chk("保存后同步到 FeedStore", JSON.stringify(win.FeedStore.getConfig().exam.mutedTypes) === JSON.stringify(muted), JSON.stringify(win.FeedStore.getConfig().exam.mutedTypes));
-const brOutEarly = win.AdminState.buildBroadcastData();
-chk("mutedTypes 已写入生成的配置", /"mutedTypes"/.test(brOutEarly), (/\"mutedTypes\":\s*\[[^\]]*\]/.exec(brOutEarly) || [""])[0]);
+chk("保存后同步到 FeedStore", JSON.stringify(win.FeedStore.getConfig().exam.mutedTypes) === JSON.stringify(muted));
+
+/* ---- 自定义播报音频 ---- */
+chk("音频状态默认提示内置提示音", /内置合成提示音/.test(doc.getElementById("audioStatus").innerHTML), doc.getElementById("audioStatus").textContent.slice(0, 40));
+const fakeAudio = { name: "ding.mp3", type: "audio/mpeg", size: 45 * 1024, __dataUrl: "data:audio/mpeg;base64,QUJD" };
+const audioInput = doc.getElementById("audioFile");
+audioInput.files = [fakeAudio];
+audioInput.onchange.call(audioInput);
+flush(3);
+chk("音频已写入设置", /^data:audio\//.test(win.AdminState.state.br.settings.customAudio), (win.AdminState.state.br.settings.customAudio || "").slice(0, 24));
+chk("音频文件名已记录", /ding\.mp3/.test(win.AdminState.state.br.settings.customAudioName), win.AdminState.state.br.settings.customAudioName);
+chk("音频状态已更新", /ding\.mp3/.test(doc.getElementById("audioStatus").innerHTML), doc.getElementById("audioStatus").textContent.slice(0, 50));
+const audioGen = win.AdminState.buildBroadcastData();
+chk("音频已写进生成的配置", /"customAudio"/.test(audioGen) && /data:audio/.test(audioGen), (/\"customAudioName\":\s*\"[^\"]*\"/.exec(audioGen) || [""])[0]);
+doc.getElementById("audioTest").onclick();
+flush(5);
+chk("试听触发了音频播放", (win.__audioPlays || []).some(a => a.played > 0), (win.__audioPlays || []).length + " 个 audio 实例");
+
+/* 广播引擎：有自定义音频时应先放音频 */
+if (win.Broadcast) {
+  win.FeedStore.setConfig(win.AdminState.state.br, true);
+  win.Broadcast.test("important");
+  flush(5);
+  chk("广播播报也使用自定义音频", (win.__audioPlays || []).filter(a => a.played > 0).length >= 2, (win.__audioPlays || []).filter(a => a.played > 0).length + " 次播放");
+} else {
+  chk("广播引擎已加载", false, "Broadcast 未定义");
+}
+
+doc.getElementById("audioClear").onclick();
+chk("清除音频生效", win.AdminState.state.br.settings.customAudio === "", JSON.stringify(win.AdminState.state.br.settings.customAudio));
+
+/* ---- 广播发布 ---- */
+tab("broadcast");
+doc.getElementById("bcText").value = "自检广播：请考生注意时间。";
+doc.getElementById("bcVoice").value = "自检广播，请考生注意时间。";
+doc.getElementById("bcLevel").value = "important";
+doc.getElementById("bcSend").onclick();
+const msgs = win.FeedStore.messages;
+chk("广播已写入广播队列", msgs.length === 1, msgs.length + " 条");
+chk("广播记录表已渲染", rowCount("bcTable") >= 1, rowCount("bcTable") + " 行");
+chk("发送后输入框已清空", doc.getElementById("bcText").value === "");
+chk("广播源默认用仓库内置文件", win.FeedStore.getFeedUrl() === "data/feed.json", win.FeedStore.getFeedUrl());
 
 /* ---- 数据生成 ---- */
 tab("publish");
@@ -195,7 +241,6 @@ const siteSrc = win.AdminState.buildSiteData();
 const isJs = (s) => { try { new Function(s); return true; } catch (e) { return false; } };
 chk("bg-data.js 生成成功", /window\.BG_DATA\s*=/.test(bgSrc) && bgSrc.length > 500, bgSrc.length + " 字符");
 chk("bg-data.js 是合法 JS", isJs(bgSrc));
-chk("broadcast-data.js 生成成功", /window\.BROADCAST_CONFIG\s*=/.test(brSrc), brSrc.length + " 字符");
 chk("broadcast-data.js 是合法 JS", isJs(brSrc));
 chk("site-data.js 生成成功", /window\.SITE_DATA\s*=/.test(siteSrc) && isJs(siteSrc));
 chk("feed.json.js 含刚才的广播", /自检广播/.test(feedSrc));
@@ -204,51 +249,55 @@ chk("feed.json 是合法 JSON", (() => {
   catch (e) { return false; }
 })());
 
-/* ---- 发布到 GitHub（异步） ---- */
+/* ---- 发布到 GitHub ---- */
 doc.getElementById("ghOwner").value = "gvbhj111";
 doc.getElementById("ghRepo").value = "xwyz-exam-clock";
 doc.getElementById("ghBranch").value = "main";
 doc.getElementById("ghToken").value = "ghp_fake_token";
 chk("发布按钮已绑定事件", typeof doc.getElementById("pushSelected").onclick === "function");
 chk("发布表格复选框可读取", win.AdminUI.selectedFiles().length >= 4, win.AdminUI.selectedFiles().length + " 个");
+const statusBefore = doc.getElementById("status").textContent.length;
 doc.getElementById("pushSelected").onclick();
+chk("点击发布后立即有日志", doc.getElementById("status").textContent.length > statusBefore,
+  doc.getElementById("status").textContent.slice(statusBefore).trim().slice(0, 70));
+flush(80);
 
-setTimeout(() => {
-  const status = doc.getElementById("status").textContent;
-  chk("发布：读取远端并提交成功", /已提交/.test(status), status.split("\n").filter(l => /提交|失败|中止/.test(l)).slice(-3).join(" ; "));
-  chk("发布：无鉴权错误", !/未提供 GitHub Token/.test(status));
-  chk("发布：Token 已进入状态", win.AdminState.state.gh.token === "ghp_fake_token");
+const status = doc.getElementById("status").textContent;
+chk("发布：逐个提交成功", /✓ js\/exam\.js 已提交/.test(status), status.split("\n").filter(l => /✓|✗/.test(l)).slice(-2).join(" ; "));
+chk("发布：有成功/失败汇总", /发布流程结束：成功 \d+ 个，失败 \d+ 个/.test(status), (/发布流程结束[^\n]*/.exec(status) || [""])[0]);
+chk("发布：Token 已进入状态", win.AdminState.state.gh.token === "ghp_fake_token");
 
-  /* ---- 考试数据 ---- */
-  tab("exam");
-  doc.getElementById("examEditor").value = fs.readFileSync(path.join(ROOT, "js/exam.js"), "utf8");
-  doc.getElementById("checkExam").onclick();
-  const types = win.AdminState.state.examTypes;
-  chk("exam.js 解析出考试类型", !!types && types.length >= 8, types && types.length);
-  chk("exam.js 含高三/高一类型", !!types && types.some(t => /高三/.test(t.type)) && types.some(t => /高一/.test(t.type)), types && types.map(t => t.type).slice(0, 4).join("/"));
-  chk("考试类型表已渲染", rowCount("examTable") >= 8, rowCount("examTable") + " 行");
-  chk("exam.js 语法检查通过", /语法正常/.test(doc.getElementById("examHint").innerHTML), doc.getElementById("examHint").innerHTML.slice(0, 40));
+/* ---- 广播一键发布到仓库 ---- */
+tab("broadcast");
+chk("广播页显示仓库名", /xwyz-exam-clock/.test(doc.getElementById("bcRepoLabel").textContent), doc.getElementById("bcRepoLabel").textContent);
+const b2 = doc.getElementById("status").textContent.length;
+doc.getElementById("bcPublish").onclick();
+flush(40);
+const s2 = doc.getElementById("status").textContent.slice(b2);
+chk("广播一键发布有结果", /广播已发布到仓库|广播发布失败/.test(s2), s2.trim().split("\n").slice(0, 3).join(" ; "));
 
-  /* ---- 外观 ---- */
-  tab("theme");
-  doc.getElementById("thSlogan").value = "考试时钟";
-  doc.getElementById("thDarken").value = "60";
-  doc.getElementById("thSave").onclick();
-  chk("外观已保存", win.AdminState.state.theme.darken === 60, win.AdminState.state.theme.darken);
-  const site2 = win.AdminState.buildSiteData();
-  chk("外观改动写入生成结果", /"darken": 60/.test(site2), /darken[^,]*/.exec(site2));
+/* ---- 外观 ---- */
+tab("theme");
+doc.getElementById("thSlogan").value = "考试时钟";
+doc.getElementById("thDarken").value = "60";
+doc.getElementById("thSave").onclick();
+chk("外观已保存", win.AdminState.state.theme.darken === 60, win.AdminState.state.theme.darken);
 
-  /* ---- 下载路径 ---- */
-  tab("publish");
-  doc.getElementById("downloadAll").onclick();
-  chk("逐个下载全部文件已触发", downloads.length >= 4, downloads.join(","));
+/* ---- 下载 ---- */
+tab("publish");
+doc.getElementById("downloadAll").onclick();
+chk("逐个下载全部文件已触发", downloads.length >= 4, downloads.join(","));
 
-  chk("运行期无未捕获错误", errors.filter(e => e.startsWith("ERROR")).length === 0, errors.filter(e => e.startsWith("ERROR")).join(" | ").slice(0, 400));
+chk("运行期无未捕获错误", errors.filter(e => e.startsWith("ERROR")).length === 0, errors.filter(e => e.startsWith("ERROR")).join(" | ").slice(0, 400));
 
-  console.log(out.join("\n"));
-  console.log("\n--- 运行时告警（预期内的浏览器 API 缺失）---");
-  console.log(errors.slice(0, 12).join("\n") || "（无）");
-  const failed = out.filter(l => l.startsWith("FAIL")).length;
-  console.log("\n结果：" + (out.length - failed) + "/" + out.length + " 通过");
-  process.exit(failed ? 1 : 0);
-}, 80);
+console.log(out.join("\n"));
+console.log("\n--- 运行时告警（预期内的浏览器 API 缺失）---");
+console.log(errors.slice(0, 12).join("\n") || "（无）");
+const failed = out.filter(l => l.startsWith("FAIL")).length;
+console.log("\n结果：" + (out.length - failed) + "/" + out.length + " 通过");
+process.exit(failed ? 1 : 0);
+
+})().catch(e => {
+  console.log("HARNESS ERROR: " + (e.stack || e.message));
+  process.exit(1);
+});

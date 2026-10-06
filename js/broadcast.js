@@ -70,6 +70,55 @@
     });
   }
 
+  /* ============================================================ 自定义音频 */
+  /*
+   * 播放自定义播报音频（后台可上传 mp3/wav/ogg）。
+   * 解析顺序：消息自带 audio → 设置里的 customAudio → chimeFile
+   * 返回 Promise<boolean>：true 表示确实播放了自定义音频。
+   */
+  function playCustomAudio(msgAudio, opts) {
+    opts = opts || {};
+    var st = settings();
+    var url = msgAudio || st.customAudio || st.chimeFile || "";
+    if (!url || ENGINE.muted) return Promise.resolve(false);
+    return new Promise(function (resolve) {
+      try {
+        var a = ENGINE.audio || (ENGINE.audio = new Audio());
+        a.pause();
+        a.src = url;
+        a.volume = Math.min(1, Math.max(0, +(opts.volume != null ? opts.volume : (st.customAudioVolume == null ? 1 : st.customAudioVolume))));
+        a.currentTime = 0;
+        var done = false;
+        var fin = function (ok) {
+          if (done) return;
+          done = true;
+          if (ok) ENGINE.lastAudioAt = Date.now();
+          resolve(ok);
+        };
+        a.onended = function () { fin(true); };
+        a.onerror = function () {
+          console.warn("[broadcast] 自定义音频加载失败，改用内置提示音：", url.slice(0, 60) + "…");
+          fin(false);
+        };
+        // 音频时长未知时兜底，避免一直等下去
+        setTimeout(function () { fin(true); }, opts.maxWaitMs || 30000);
+        var p = a.play();
+        if (p && p.catch) p.catch(function (e) { console.warn("[broadcast] 自定义音频被浏览器拦截：", e.message); fin(false); });
+      } catch (e) {
+        console.warn("[broadcast] 自定义音频播放异常：", e.message);
+        resolve(false);
+      }
+    });
+  }
+
+  /* 试听：优先自定义音频，没有就用内置合成提示音 */
+  function testAudio() {
+    return playCustomAudio("", {}).then(function (ok) {
+      if (!ok) return chime();
+      return true;
+    });
+  }
+
   function pickVoice() {
     if (!global.speechSynthesis) return null;
     var st = settings();
@@ -163,8 +212,19 @@
     if (!st.enabled) { logAnnouncement(item, "disabled"); return item; }
 
     show(item, opts);
-    if (opts.voice !== false) {
-      chime().then(function () { speak(item.voice || item.text, opts); });
+    // 提示音：优先自定义音频，其次 chimeFile，最后内置合成音
+    var hasCustom = !!(opts.audio || st.customAudio || st.chimeFile);
+    var afterAudio = function () {
+      // customAudioBeforeVoice = false 时只放音频、不朗读（有些学校用录好的真人语音）
+      if (st.customAudioBeforeVoice === false && hasCustom) return;
+      if (opts.voice !== false) speak(item.voice || item.text, opts);
+    };
+    if (st.voice || hasCustom) {
+      playCustomAudio(opts.audio, opts).then(function (played) {
+        if (played) return afterAudio();
+        if (st.chime) return chime().then(afterAudio);
+        return afterAudio();
+      });
     }
     notify(item.title, stripTags(item.text));
     // 大屏幕上顺带弹出封面，提示更醒目（试卷封面 / 科目信息）
@@ -456,6 +516,12 @@
         var Ctx = global.AudioContext || global.webkitAudioContext;
         if (Ctx) { ENGINE.ctx = ENGINE.ctx || new Ctx(); ENGINE.ctx.resume(); }
         if (global.speechSynthesis) { var u = new SpeechSynthesisUtterance(""); u.volume = 0; global.speechSynthesis.speak(u); }
+        // 解锁 <audio>，否则自动播报可能被浏览器拦截
+        var a = ENGINE.audio || (ENGINE.audio = new Audio());
+        a.muted = true;
+        var p = a.play();
+        if (p && p.then) p.then(function () { a.pause(); a.muted = false; }).catch(function () { a.muted = false; });
+        else a.muted = false;
       } catch (e) { }
       // 首次交互时顺便申请系统通知权限（浏览器要求用户手势）
       try {
@@ -484,6 +550,10 @@
       paintMute();
     },
     reloadConfig: function () { if (Store) { Store.init(); } },
+    /* 试听自定义提示音（没有自定义音频时播放内置合成音） */
+    testAudio: testAudio,
+    playAudio: playCustomAudio,
+    stopAudio: function () { try { if (ENGINE.audio) { ENGINE.audio.pause(); ENGINE.audio.currentTime = 0; } } catch (e) { } },
     history: function () { return ENGINE.log; }
   };
 

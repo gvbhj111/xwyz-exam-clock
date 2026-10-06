@@ -8,14 +8,30 @@
  * html 上的 CSS 变量由 js/background.js 注入：
  *   --bg-filter 画面滤镜  --bg-focus 定位  --bg-darken 遮罩浓度
  *   --bg-transition 过渡时长  --bg-kenburns 缓慢缩放开关
+ *
+ * 层级说明（重要）：
+ *   以前用 z-index:-2，在部分浏览器/与 backdrop-filter 同时存在时，
+ *   负层级元素会被压到根元素(html)背景之下 —— 表现就是"背景切换了但屏幕没变"。
+ *   现在改成"背景层 z-index:0 + 内容层 z-index:1"的正常叠放，不再依赖负层级。
  */
+html,
+body {
+  background: #111;
+}
+
 #bgLayer {
   position: fixed;
-  z-index: -2;
+  z-index: 0;
   inset: 0;
   overflow: hidden;
   background: #111;
   pointer-events: none;
+}
+
+/* 内容层压在背景层之上 */
+#main {
+  position: relative;
+  z-index: 1;
 }
 
 #bgLayer .bgFrame {
@@ -187,5 +203,41 @@ html.no-banner #alert {
 @media (aspect-ratio <=8/7) {
   #alert {
     font-size: .55rem;
+  }
+}
+
+/* 手机适配 */
+@media (width <=760px) {
+  #alert {
+    border-left-width: .3em;
+    padding: .25rem .3rem;
+  }
+
+  #alertText {
+    font-size: 1.05em;
+    line-height: 1.35;
+  }
+
+  .alertTools a {
+    margin-left: .45em;
+  }
+
+  #alertPanel {
+    max-height: 45vh;
+    font-size: .46rem;
+  }
+
+  #alertPanel .space-between {
+    flex-wrap: wrap;
+    gap: .2em;
+  }
+
+  #alertPanel .btn {
+    padding: .12em .4em;
+  }
+
+  /* 手机上关掉高耗能的背景动效，滚动更顺滑 */
+  #bgLayer .bgFrame.show {
+    animation: none;
   }
 }

@@ -54,12 +54,14 @@
     var box = $("bgSourceList");
     if (!box || !global.bgSources) return;
     box.innerHTML = "";
-    var all = chip('<i class="fa-solid fa-shuffle"></i> 随机混合', function () {
+    var all = chip('<i class="fa-solid fa-shuffle"></i> 随机混合（自动轮播）', function () {
       var cfg = currentConfig();
+      if (!cfg) return notice("背景还没准备好，请刷新页面重试");
       cfg.settings.enabled = true;
       cfg.items.forEach(function (i) { if (i.type !== "local" || i.id === "local-repo") i.enabled = i.weight > 0; });
       if (global.bgSave) global.bgSave(cfg);
-      notice("已恢复为多来源随机轮播");
+      var r = global.bgNext ? global.bgNext() : null;
+      notice("已恢复多来源随机轮播" + (r ? "" : "（没有可用图片，请检查后台背景来源）"));
     });
     all.setAttribute("data-primary", "1");
     box.appendChild(all);
@@ -67,9 +69,20 @@
     global.bgSources().forEach(function (s) {
       if (s.id === "gallery-all") return; // 与内置图库重复，避免刷屏
       var label = s.name + (s.count ? "(" + s.count + ")" : "");
+      // 只切换一张：提示用
       box.appendChild(chip(label, function () {
-        global.bgApplySource(s.id);
-        notice("已切换到：" + s.name);
+        var r = global.bgApplySource ? global.bgApplySource(s.id) : null;
+        if (r && r.ok) notice("已切换到：" + s.name + "（自动轮播已暂停，可点“下一张”或选“自动轮播”）");
+        else notice("切换失败：" + ((r && r.reason) || "未知原因") + "，已保留当前背景");
+        refreshActive();
+      }));
+      // 持续轮播：把轮播范围限定到该来源
+      box.appendChild(chip("↻ " + (s.count ? s.count + "张" : "轮播"), function () {
+        var r = global.bgApplySource ? global.bgApplySource(s.id, { keepRotation: true }) : null;
+        if (r && r.ok) notice("已把轮播范围限定为：" + s.name);
+        else notice("切换失败：" + ((r && r.reason) || "未知原因"));
+        renderSources();
+        refreshActive();
       }));
     });
   }
@@ -144,6 +157,7 @@
     url = url.trim();
     if (!url) return;
     var cfg = currentConfig();
+    if (!cfg) return notice("背景还没准备好，请刷新页面重试");
     var id = "user-custom";
     var item = cfg.items.filter(function (i) { return i.id === id; })[0];
     if (!item) {
@@ -155,17 +169,20 @@
     cfg.settings.enabled = false;
     global.bgSave(cfg);
     global.bgSet({ kind: "image", author: "自定义", name: "", vol: "我的自定义背景", url: url });
-    notice("已应用自定义背景");
+    notice("已应用自定义背景（如果一直没变化，说明这个地址加载不出来，可换一个试试）");
     renderSources();
+    refreshActive();
   };
 
   global.bgClearCustom = function () {
     var cfg = currentConfig();
+    if (!cfg) return notice("背景还没准备好，请刷新页面重试");
     cfg.items = cfg.items.filter(function (i) { return i.id !== "user-custom"; });
     cfg.settings.enabled = true;
     global.bgSave(cfg);
     notice("已清除自定义背景，恢复默认轮播");
     renderSources();
+    refreshActive();
   };
 
   /* 套用站点外观（js/site-data.js） */

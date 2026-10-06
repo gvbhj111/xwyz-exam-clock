@@ -37,7 +37,11 @@
     examTypes: null,
     draftMuted: null,
     dirty: {},
-    gh: { owner: "gvbhj111", repo: "xwyz-exam-clock", branch: "main", message: "chore(admin): update exam clock data", token: "" },
+    gh: {
+      owner: "gvbhj111", repo: "xwyz-exam-clock", branch: "main",
+      message: "chore(admin): update exam clock data",
+      feedPath: "data/feed.json", token: ""
+    },
     editingSourceId: null
   };
 

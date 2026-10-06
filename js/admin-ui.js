@@ -30,6 +30,7 @@
     $("bgEnabled").value = s.enabled ? "1" : "0";
     $("bgInterval").value = s.intervalSeconds;
     $("bgOrder").value = s.order;
+    if ($("bgWeightMode")) $("bgWeightMode").value = s.weightMode || "perSource";
     $("bgTransitionMs").value = s.transitionMs;
     $("bgEffect").value = s.effect;
     $("bgDarken").value = s.darken;
@@ -273,8 +274,16 @@
         }
       };
     });
-    if ($("bcFeedUrl")) $("bcFeedUrl").value = (fs && fs.getFeedUrl()) || "";
+    if ($("bcFeedUrl")) $("bcFeedUrl").value = St.state.br.feedUrl || "";
+    if ($("bcFeedPath")) $("bcFeedPath").value = St.state.gh.feedPath || "data/feed.json";
     if ($("bcFeedBranch")) $("bcFeedBranch").value = St.state.br.feedBranch || "main";
+    if ($("bcRepoLabel")) $("bcRepoLabel").textContent = St.state.gh.owner + "/" + St.state.gh.repo;
+    if ($("bcSyncHint")) {
+      var hasTok = !!(St.state.gh.token || U.lsGet(U.C.LS_TOKEN, null));
+      $("bcSyncHint").innerHTML = hasTok
+        ? '已检测到 Token，可以直接发布广播。'
+        : '需要先在「发布」页填写 GitHub Token（只需一次，之后保存在本机）。';
+    }
   }
 
   function sendBroadcast() {
@@ -341,7 +350,34 @@
     $("tsUrl").value = t.url || "";
     $("tsField").value = t.field || "";
     $("tsOffset").value = t.offsetMs || 0;
+    if ($("brFeedPath")) $("brFeedPath").value = St.state.gh.feedPath || "data/feed.json";
+    // 自定义播报音频
+    if ($("brAudioVolume")) $("brAudioVolume").value = s.customAudioVolume == null ? 1 : s.customAudioVolume;
+    if ($("brAudioBeforeVoice")) $("brAudioBeforeVoice").value = s.customAudioBeforeVoice === false ? "0" : "1";
+    if ($("brChime2")) $("brChime2").value = s.chime ? "1" : "0";
+    renderAudioStatus();
     renderExamToggle();
+  }
+
+  /* 自定义播报音频：状态显示 + 预览播放器 */
+  function renderAudioStatus() {
+    var s = St.state.br.settings;
+    var el = $("audioStatus");
+    var prev = $("audioPreview");
+    var data = s.customAudio || s.chimeFile || "";
+    if (el) {
+      if (data) {
+        var kb = Math.round(data.length * 3 / 4 / 1024);
+        el.innerHTML = '当前：<span class="ok">' + U.esc(s.customAudioName || "自定义音频") + "</span>（约 " + kb + " KB）" +
+          (kb > 300 ? ' <span class="err">偏大，建议压缩到 300KB 以内</span>' : "");
+      } else {
+        el.innerHTML = "当前：使用内置合成提示音（可选上传自定义音频）";
+      }
+    }
+    if (prev) {
+      if (data) { prev.src = data; prev.style.display = ""; }
+      else { prev.removeAttribute("src"); prev.style.display = "none"; }
+    }
   }
 
   /* --------------------------------------------- 逐场考试自动播报开关 */
@@ -418,6 +454,10 @@
     s.showBanner = $("brBanner").value === "1";
     s.notify = $("brNotify").value === "1";
     s.pollSeconds = +$("brPoll").value || 15;
+    // 自定义播报音频（文件内容保存在 state 里，这里只读控件）
+    if ($("brAudioVolume")) s.customAudioVolume = Math.min(1, Math.max(0, +$("brAudioVolume").value || 0));
+    if ($("brAudioBeforeVoice")) s.customAudioBeforeVoice = $("brAudioBeforeVoice").value === "1";
+    if ($("brChime2")) s.chime = $("brChime2").value === "1";
 
     br.exam = br.exam || {};
     br.exam.enabled = $("brExamEnabled").value === "1";
@@ -454,6 +494,8 @@
       field: $("tsField").value.trim(),
       offsetMs: +$("tsOffset").value || 0
     };
+    // 广播源文件路径（仓库内）
+    if ($("brFeedPath")) St.state.gh.feedPath = $("brFeedPath").value.trim() || "data/feed.json";
     return br;
   }
 
@@ -500,8 +542,12 @@
   function loadExamText() {
     log("尝试加载 ./js/exam.js");
     return fetch("./js/exam.js", { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.text();
+      })
       .then(function (txt) {
+        if (!txt || txt.length < 50) throw new Error("返回内容为空（" + (txt ? txt.length : 0) + " 字符）");
         $("examEditor").value = txt;
         St.state.examSource = txt;
         var types = collectExamTypes(txt);
@@ -510,14 +556,31 @@
           St.state.draftMuted = null;
           renderExamTable(types);
           renderExamToggle();
-          $("examHint").innerHTML = '<span class="ok">已解析 ' + types.length + " 个考试类型</span>";
+          $("examHint").innerHTML = '<span class="ok">已从仓库载入 exam.js · 解析出 ' + types.length + " 个考试类型</span>";
         }
         log("exam.js 已加载（" + txt.length + " 字符）");
+        St.save();
         return txt;
       })
       .catch(function (e) {
-        log("加载 exam.js 失败：" + e.message + "（file:// 下请用本地文件选择）");
-        U.toast("加载失败，可改用本地文件", "err");
+        var msg = e && e.message ? e.message : String(e);
+        log("加载 exam.js 失败：" + msg);
+        // 回退 1：用本机草稿
+        var draft = St.state.examSource;
+        if (draft && draft.length > 50) {
+          $("examEditor").value = draft;
+          var t2 = collectExamTypes(draft);
+          if (t2) { St.state.examTypes = t2; renderExamTable(t2); renderExamToggle(); }
+          $("examHint").innerHTML = '<span class="err">无法从仓库读取（' + U.esc(msg) + '），已载入本机草稿；' +
+            "可点「保存并发布到仓库」覆盖线上版本</span>";
+          log("已回退到本机草稿（" + draft.length + " 字符）");
+          return draft;
+        }
+        // 回退 2：提示手动选择文件
+        $("examHint").innerHTML = '<span class="err">读取 ./js/exam.js 失败：' + U.esc(msg) +
+          "</span> · 可用右侧「或选择本地文件」载入 exam.js";
+        U.toast("读取 exam.js 失败：" + msg, "err");
+        return null;
       });
   }
 
@@ -570,18 +633,22 @@
     $("ghMessage").value = St.state.gh.message;
   }
 
-  /* 收集"发布"页勾选的文件（用 data-file 属性判断，兼容各种 DOM 实现） */
+  /*
+   * 收集"发布"页勾选的文件。
+   * 注意：真实浏览器里 HTMLCollection 走 Array.prototype.some 会直接抛异常
+   * （老代码就是这样把"发布"按钮点成哑巴的），这里统一用 querySelectorAll。
+   */
   function selectedFiles() {
     var table = $("publishTable");
     if (!table) return [];
+    var boxes = table.querySelectorAll('input[data-file]');
     var out = [];
-    var visit = function (node) {
-      (node.children || []).forEach(function (c) {
-        if (c.tagName === "INPUT" && c.getAttribute("data-file") && c.checked !== false) out.push(c.getAttribute("data-file"));
-        visit(c);
-      });
-    };
-    visit(table);
+    for (var i = 0; i < boxes.length; i++) {
+      var b = boxes[i];
+      if (b.checked === false) continue;
+      var f = b.getAttribute("data-file");
+      if (f) out.push(f);
+    }
     return out;
   }
 
@@ -591,6 +658,7 @@
     renderBgTable: renderBgTable,
     renderBroadcast: renderBroadcast,
     renderRules: renderRules,
+    renderAudioStatus: renderAudioStatus,
     renderExamToggle: renderExamToggle,
     setAllMuted: setAllMuted,
     collectMuted: collectMuted,

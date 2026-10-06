@@ -579,17 +579,189 @@ ul.list {
 }
 
 /* ------------------------------------------------------------ 响应式 */
+/* 平板 */
+@media (width <=900px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .gridCards {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+/* 手机 */
 @media (width <=720px) {
+
+  /* 触屏上放大点击区域，输入框 ≥16px 可避免 iOS 自动缩放 */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  button,
+  .btn {
+    padding: 10px 14px;
+  }
+
+  button.mini {
+    padding: 6px 10px;
+  }
+
+  label {
+    font-size: .95em;
+  }
+
+  body {
+    font-size: 15px;
+    /* 关掉 iOS 横屏时的字号自动放大 */
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
   main {
-    padding: 14px;
+    padding: 12px;
+  }
+
+  .panel {
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  /* 顶部栏与导航改为可横向滚动，避免挤压 */
+  .topbar {
+    position: static;
+    padding: 10px 12px;
+  }
+
+  .brand img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand b {
+    font-size: .98em;
   }
 
   .tabs {
+    position: sticky;
     top: 0;
-    position: static;
+    padding: 8px 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 
-  .topbar {
-    position: static;
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabs a {
+    padding: 9px 12px;
+  }
+
+  /* 表单与卡片全部单列 */
+  .grid,
+  .gridCards {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    gap: 8px;
+  }
+
+  .actions button,
+  .actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 120px;
+  }
+
+  /* 表格：横向滑动 + 首列（勾选框）固定不动 */
+  .tableWrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    font-size: .88em;
+    min-width: 520px;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    white-space: nowrap;
+  }
+
+  td.row {
+    flex-wrap: nowrap;
+  }
+
+  /* 粘性保存条留出安全区（iPhone 底部横条） */
+  .actions.stickyActions {
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  }
+
+  /* 弹窗全屏化 */
+  .modal {
+    padding: 10px;
+    align-items: flex-end;
+  }
+
+  .modalCard {
+    max-height: 92vh;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .toastBox {
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    left: 10px;
+  }
+
+  .toast {
+    max-width: none;
+  }
+
+  #examEditor {
+    min-height: 300px;
+    font-size: .82em;
+  }
+
+  #adminLogo {
+    width: 150px;
+  }
+
+  .preview {
+    height: 28vh;
+  }
+}
+
+/* 小屏手机（iPhone SE 等） */
+@media (width <=400px) {
+
+  .brand .dim,
+  #footStat {
+    display: none;
+  }
+
+  .tabs a {
+    padding: 8px 10px;
+    font-size: .88em;
+  }
+
+  .card.stat b {
+    font-size: 1.4em;
+  }
+}
+
+/* 触屏设备：下拉/悬停不适用，这里把 hover 效果去掉，避免"粘住" */
+@media (hover: none) {
+  button:hover,
+  .btn:hover {
+    border-color: var(--line);
+    background: var(--panel-strong);
   }
 }

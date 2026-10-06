@@ -78,7 +78,15 @@
       weight: 6,
       api: "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=zh-CN",
       base: "https://cn.bing.com",
-      cacheMinutes: 180
+      cacheMinutes: 180,
+      /* 接口取不到时（校园网/离线）用这几个已知的必应每日图兜底，
+         保证"必应"这个来源永远有图可切 */
+      fallback: [
+        { author: "Bing", name: "每日壁纸 A", url: "https://cn.bing.com/th?id=OHR.BlueCanyon_ZH-CN6846889594_1920x1080.jpg" },
+        { author: "Bing", name: "每日壁纸 B", url: "https://cn.bing.com/th?id=OHR.GreatBarrierReef_ZH-CN4572073279_1920x1080.jpg" },
+        { author: "Bing", name: "每日壁纸 C", url: "https://cn.bing.com/th?id=OHR.MontBlanc_ZH-CN9505161127_1920x1080.jpg" },
+        { author: "Bing", name: "每日壁纸 D", url: "https://cn.bing.com/th?id=OHR.SnowyHills_ZH-CN5560284453_1920x1080.jpg" }
+      ]
     }
   ];
 
@@ -159,7 +167,14 @@
       focus: "center center", // 背景定位
       showCaption: true,      // 是否在页脚显示当前背景来源
       pauseWhileHidden: true, // 后台标签页暂停轮播
-      avoidRepeat: 2          // 最近 N 张不重复
+      avoidRepeat: 2,         // 最近 N 张不重复
+      /*
+       * 权重分配方式：
+       *   perSource（默认）—— 按"来源"分权重，各来源机会均等
+       *   perCount         —— 按"图片张数"分权重，图多的来源出现更多
+       * 默认按来源，否则内置图库 542 张会把必应/随机图这类小来源彻底淹没。
+       */
+      weightMode: "perSource"
     },
     items: [
       {

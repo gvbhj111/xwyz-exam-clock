@@ -6,10 +6,11 @@
   padding: 0;
 }
 
-/* 网页字体及背景 */
+/* 网页字体 */
 html {
-  background: #333 fixed center url("https://ooo.0x0.ooo/2025/04/03/O01fAt.jpg");
-  background-size: cover;
+  /* 背景图统一交给 #bgLayer（js/background.js）渲染：
+     这里只留纯色兜底，避免"切换了背景但被这张旧图挡住看不见" */
+  background: #111;
   color: #fff;
   font-size: 48px;
   font-size: 2.7vw;
@@ -17,8 +18,7 @@ html {
 }
 
 body {
-  background: transparent fixed center;
-  background-size: cover;
+  background: transparent;
 }
 
 /* 分散对齐 */
@@ -225,6 +225,98 @@ footer {
   .card {
     flex-direction: column;
     margin: auto;
+  }
+}
+
+/* 适配手机（窄屏横竖屏都算） */
+@media (width <=760px) {
+
+  /* 触屏上不再依赖 hover，字号按屏宽放大 */
+  html {
+    font-size: 4.6vw;
+  }
+
+  #main>* {
+    margin: .35rem .6rem;
+  }
+
+  .notify>div,
+  .bar,
+  .card>* {
+    text-shadow: none;
+  }
+
+  /* 导航与分析区允许换行，避免元素被挤出屏幕 */
+  nav.space-between {
+    flex-wrap: wrap;
+    gap: .2rem;
+    justify-content: center;
+  }
+
+  nav .sub.space-between {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  #clock {
+    font-size: 4em;
+  }
+
+  #subject,
+  #timer {
+    font-size: 2.4em;
+  }
+
+  #duration,
+  #activity {
+    font-size: 1.2em;
+  }
+
+  /* 下拉菜单：贴右边缘、限宽、可滚动，防止超出屏幕 */
+  .dropdown>:last-child {
+    right: 0 !important;
+    max-width: 92vw;
+    max-height: 70vh;
+    overflow: auto;
+  }
+
+  .dropdown> :last-child>* {
+    padding: .25em;
+  }
+
+  .shieldlist a {
+    font-size: .62em;
+    padding: .15em .4em;
+  }
+
+  footer {
+    font-size: .42rem;
+  }
+
+  [data-title]::after {
+    right: auto;
+    left: 0;
+    width: min(12em, 80vw);
+  }
+}
+
+/* 手机横屏：高度很矮，优先压缩字号与间距 */
+@media (height <=430px) and (orientation: landscape) {
+  html {
+    font-size: 3.2vw;
+  }
+
+  #main>* {
+    margin: .2rem .5rem;
+  }
+
+  .card {
+    margin: .2rem -.5rem;
+  }
+
+  #clock {
+    font-size: 3em;
   }
 }
 

@@ -9,7 +9,7 @@
   <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="https://lib.baomitu.com/font-awesome/6.5.1/css/all.min.css" media="none"
     onload="this.media='all'">
-  <link rel="stylesheet" href="./css/admin.css?v=8.1.1">
+  <link rel="stylesheet" href="./css/admin.css?v=8.3.0">
 </head>
 
 <body>
@@ -131,6 +131,12 @@
                 <option value="sequence">顺序</option>
               </select>
             </label>
+            <label>权重分配方式
+              <select id="bgWeightMode">
+                <option value="perSource">按来源均分（推荐：必应/随机图也有机会）</option>
+                <option value="perCount">按图片张数（图库占绝大多数）</option>
+              </select>
+            </label>
             <label>过渡时长（毫秒）
               <input type="number" id="bgTransitionMs" min="0" max="6000">
             </label>
@@ -224,25 +230,38 @@
             <button class="ghost" id="bcTemplate"><i class="fa-solid fa-file-lines"></i> 常用模板</button>
             <label class="inline"><input type="checkbox" id="bcPin"> 固定展示（不自动消失）</label>
           </div>
-          <p class="dim">"立即广播"会：① 写入本机广播队列；② 同一浏览器所有已打开的页面实时收到；③ 勾选下面的"同步到远程"后推送/轮询远程广播源，实现全校大屏同步。</p>
+          <p class="dim">"立即广播"会：① 写入本机广播队列；② 同一浏览器所有已打开的页面实时收到；
+            ③ 让全校大屏同步：点「保存并发布广播」即可（广播数据会写进仓库自带的 <code>data/feed.json</code>，无需另外配置）。</p>
         </div>
 
         <div class="panel">
-          <h3><i class="fa-solid fa-tower-broadcast"></i> 远程广播源（可选，用于多屏同步）</h3>
+          <h3><i class="fa-solid fa-tower-broadcast"></i> 全校大屏同步（内置广播源）</h3>
+          <p class="dim">广播源就是本仓库的 <code>data/feed.json</code>。点下面的按钮会把当前广播写回该文件并提交到
+            <code id="bcRepoLabel">gvbhj111/xwyz-exam-clock</code>，其它大屏会在轮询间隔内自动拉取。</p>
+          <div class="actions">
+            <button class="primary" id="bcPublish"><i class="fa-solid fa-cloud-arrow-up"></i> 保存并发布广播（推荐）</button>
+            <button class="ghost" id="bcPull"><i class="fa-solid fa-download"></i> 立即拉取</button>
+          </div>
+          <p class="dim" id="bcSyncHint">需要先在「发布」页填写 GitHub Token。</p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-sliders"></i> 高级：自定义广播源（可选）</h3>
           <div class="grid">
-            <label>广播源地址（JSON 或 GitHub Contents API）
-              <input type="text" id="bcFeedUrl" placeholder="https://raw.githubusercontent.com/用户/仓库/main/data/feed.json">
+            <label>仓库内路径
+              <input type="text" id="bcFeedPath" value="data/feed.json" placeholder="data/feed.json">
             </label>
-            <label>远程分支
+            <label>自定义地址（留空 = 用仓库内置文件）
+              <input type="text" id="bcFeedUrl" placeholder="https://.../feed.json 或 GitHub Contents API">
+            </label>
+            <label>分支
               <input type="text" id="bcFeedBranch" value="main">
             </label>
           </div>
           <div class="actions">
-            <button class="ghost" id="bcSaveFeed"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
-            <button class="ghost" id="bcPull"><i class="fa-solid fa-download"></i> 拉取远程广播</button>
-            <button class="ghost" id="bcPush"><i class="fa-solid fa-cloud-arrow-up"></i> 推送广播到远程</button>
+            <button class="ghost" id="bcSaveFeed"><i class="fa-solid fa-floppy-disk"></i> 保存设置</button>
+            <button class="ghost" id="bcPush"><i class="fa-solid fa-cloud-arrow-up"></i> 用自定义地址推送</button>
           </div>
-          <p class="dim">推荐做法：把 <code>data/feed.json</code> 放在仓库里，广播源地址填 <code>https://api.github.com/repos/&lt;用户&gt;/&lt;仓库&gt;/contents/data/feed.json</code>，推送时会自动带上 Token（在"发布"页配置）。</p>
         </div>
 
         <div class="panel">
@@ -321,11 +340,48 @@
             <label>远程轮询间隔（秒）
               <input type="number" id="brPoll" min="5" max="600">
             </label>
+            <label>广播源文件（仓库内路径）
+              <input type="text" id="brFeedPath" value="data/feed.json" placeholder="data/feed.json">
+            </label>
           </div>
+          <p class="dim">广播源默认就是仓库自带的 <code>data/feed.json</code>，发布时会随同其它文件一起更新，多屏同步无需任何额外配置。</p>
           <div class="actions">
             <button class="ghost" id="brTestVoice"><i class="fa-solid fa-play"></i> 试听语音</button>
             <button class="ghost" id="brTestAlert"><i class="fa-solid fa-bell"></i> 测试横幅 + 语音</button>
           </div>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-music"></i> 自定义播报音频</h3>
+          <p class="dim">上传一段提示音（铃声 / 三连音 / 录好的真人播报），自动播报时会<b>先放这段音频</b>，需要时再朗读文字。
+            推荐 mp3，10~20 秒、300KB 以内；音频会内联进 <code>js/broadcast-data.js</code>，随「发布」一起更新到仓库，所有大屏共用。</p>
+          <div class="actions">
+            <label class="inline">选择音频文件
+              <input type="file" id="audioFile" accept="audio/*">
+            </label>
+            <button class="ghost" id="audioTest"><i class="fa-solid fa-play"></i> 试听</button>
+            <button class="ghost" id="audioClear"><i class="fa-solid fa-trash"></i> 清除音频</button>
+            <button class="ghost" id="audioUrlSet"><i class="fa-solid fa-link"></i> 用音频网址</button>
+          </div>
+          <div class="grid">
+            <label>音频音量（0-1）
+              <input type="number" id="brAudioVolume" min="0" max="1" step="0.1">
+            </label>
+            <label>放完音频之后
+              <select id="brAudioBeforeVoice">
+                <option value="1">继续朗读广播文字</option>
+                <option value="0">不再朗读（只用这段音频）</option>
+              </select>
+            </label>
+            <label>内置合成提示音
+              <select id="brChime2">
+                <option value="1">开启（没有自定义音频时使用）</option>
+                <option value="0">关闭</option>
+              </select>
+            </label>
+          </div>
+          <p class="dim" id="audioStatus">当前：使用内置合成提示音</p>
+          <audio id="audioPreview" controls style="width:100%;display:none;margin-top:8px;"></audio>
         </div>
 
         <div class="panel">
@@ -485,13 +541,15 @@
             <button class="ghost" id="loadExam"><i class="fa-solid fa-download"></i> 加载当前 exam.js</button>
             <button class="ghost" id="formatExam"><i class="fa-solid fa-wand-magic-sparkles"></i> 简单格式化</button>
             <button class="ghost" id="checkExam"><i class="fa-solid fa-circle-check"></i> 语法检查</button>
+            <button class="primary" id="saveExam"><i class="fa-solid fa-floppy-disk"></i> 保存修改</button>
+            <button class="ghost" id="publishExam"><i class="fa-solid fa-cloud-arrow-up"></i> 保存并发布到仓库</button>
             <button class="ghost" id="downloadExam"><i class="fa-solid fa-file-arrow-down"></i> 下载 exam.js</button>
             <label class="inline">或选择本地文件
               <input type="file" id="examFile" accept=".js,application/javascript,text/plain">
             </label>
           </div>
           <textarea id="examEditor" spellcheck="false" placeholder="在此编辑 exam.js 原始内容"></textarea>
-          <p class="dim" id="examHint">语法检查会在本地沙箱里试运行一次，不会影响页面。</p>
+          <p class="dim" id="examHint">修改后请点「保存修改」（自动写入浏览器草稿），再点「保存并发布到仓库」才会更新线上。语法检查会在本地沙箱里试运行一次。</p>
         </div>
 
         <div class="panel">
@@ -645,15 +703,15 @@
   </div>
 
   <!-- 数据层：与主站共用 -->
-  <script src="./js/gallery.js?v=8.1.1"></script>
-  <script src="./js/bg-data.js?v=8.1.1"></script>
-  <script src="./js/broadcast-data.js?v=8.1.1"></script>
-  <script src="./data/feed.json.js?v=8.1.1"></script>
-  <script src="./js/feed-store.js?v=8.1.1"></script>
-  <script src="./js/admin-util.js?v=8.1.1"></script>
-  <script src="./js/admin-state.js?v=8.1.1"></script>
-  <script src="./js/admin-ui.js?v=8.1.1"></script>
-  <script src="./js/admin.js?v=8.1.1"></script>
+  <script src="./js/gallery.js?v=8.3.0"></script>
+  <script src="./js/bg-data.js?v=8.3.0"></script>
+  <script src="./js/broadcast-data.js?v=8.3.0"></script>
+  <script src="./data/feed.json.js?v=8.3.0"></script>
+  <script src="./js/feed-store.js?v=8.3.0"></script>
+  <script src="./js/admin-util.js?v=8.3.0"></script>
+  <script src="./js/admin-state.js?v=8.3.0"></script>
+  <script src="./js/admin-ui.js?v=8.3.0"></script>
+  <script src="./js/admin.js?v=8.3.0"></script>
 </body>
 
 </html>

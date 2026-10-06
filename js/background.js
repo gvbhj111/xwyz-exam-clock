@@ -55,14 +55,22 @@
   }
 
   /* --------------------------------------------------------- 生成候选池 */
+  /*
+   * 关键：权重按"来源"分配，而不是按"图片张数"分配。
+   * 否则内置图库有 542 张、必应只有 8 张，必应几乎永远抽不到
+   * —— 表现就是"必应这类壁纸好像没启用"。
+   */
   function planFromConfig(cfg) {
     var out = [];
+    var mode = (cfg && cfg.settings && cfg.settings.weightMode) || "perSource";
     (cfg.items || []).forEach(function (item) {
       if (item.enabled === false) return;
       var weight = clamp(item.weight == null ? 1 : item.weight, 0, 99);
       if (!weight) return;
       var entries = sourcesOf(item);
-      entries.forEach(function (e) { e.weight = weight; e.sourceId = item.id; out.push(e); });
+      if (!entries.length) return;
+      var each = mode === "perCount" ? weight : (weight / entries.length) * 10;
+      entries.forEach(function (e) { e.weight = each; e.sourceId = item.id; out.push(e); });
     });
     return out;
   }
@@ -110,10 +118,16 @@
     }
 
     if (type === "bing") {
+      // 接口缓存（8 张每日图）
       var cached = readBingCache(item);
-      return cached.map(function (x) {
+      var bingList = cached.map(function (x) {
         return { kind: "image", author: "Bing", name: x.name || "", vol: item.name, url: x.url };
       });
+      // 兜底图：保证接口取不到时"必应"来源也永远可切换
+      (item.fallback || []).forEach(function (x) {
+        bingList.push({ kind: "image", author: x.author || "Bing", name: x.name || "", vol: item.name, url: x.url });
+      });
+      return bingList;
     }
 
     if (type === "online") {
@@ -420,6 +434,9 @@
           if (src.topics && !it.topics) it.topics = src.topics;
           if (src.suffix != null && it.suffix == null) it.suffix = src.suffix;
           if (src.base && !it.base) it.base = src.base;
+          // 必应兜底图：老配置里没有，补上，否则"必应"来源可能永远是空的
+          if (src.fallback && !(it.fallback && it.fallback.length)) it.fallback = src.fallback;
+          if (src.list && src.list.length && !(it.list && it.list.length)) it.list = src.list;
         }
       });
     }
@@ -477,10 +494,54 @@
     return next();
   }
 
+  /*
+   * 切换到指定来源。
+   * opts.keepRotation = true 时保持自动轮播（只把轮播范围收窄到该来源），
+   * 否则只应用一张并暂停自动轮播。
+   */
+  function applySource(sourceId, opts) {
+    opts = opts || {};
+    if (!BG.ready) init();
+    if (!BG.data || !BG.data.items) return { ok: false, reason: "背景配置尚未就绪" };
+    var items = BG.data.items.filter(function (i) { return i.id === sourceId || i.name === sourceId; });
+    if (!items.length) return { ok: false, reason: "找不到来源：" + sourceId };
+    var entries = planFromConfig({ items: items });
+    if (!entries.length) {
+      var t = items[0].type;
+      var hint = t === "bing" ? "必应壁纸还没取到（可能被网络拦截），稍后重试或改选其它来源"
+        : t === "local" || t === "gradient" || t === "solid" || t === "video" ? "该来源还没有条目，请先在后台添加"
+          : "该来源暂时没有可用图片";
+      return { ok: false, reason: hint };
+    }
+    var e = weightedPick(entries);
+    if (opts.keepRotation) {
+      // 只保留这个来源参与轮播
+      BG.data.items.forEach(function (i) { i.enabled = (i.id === items[0].id); });
+      BG.data.settings.enabled = true;
+      writeLocal(BG.data);
+      rebuild();
+      BG.failed = 0;
+      apply(e);
+      return { ok: true, entry: e, rotating: true };
+    }
+    BG.data.settings.enabled = false;
+    writeLocal(BG.data);
+    clearTimeout(BG.timer);
+    apply(e);
+    return { ok: true, entry: e, rotating: false };
+  }
+
   global.BG = BG;
   global.bg = legacyBg;
   global.bgNext = function () { return next(); };
-  global.bgSet = function (entry) { return apply(entry); };
+  global.bgSet = function (entry) {
+    if (typeof entry === "string") {
+      entry = { kind: "image", author: "自定义", name: "", vol: "自定义", url: entry };
+    }
+    BG.data.settings.enabled = false;
+    clearTimeout(BG.timer);
+    return apply(entry);
+  };
   // 兼容旧代码：bg.cur 保存当前背景信息
   try {
     Object.defineProperty(legacyBg, "cur", {
@@ -489,17 +550,7 @@
     });
   } catch (e) { }
   global.bg.interval = null;
-  global.bgApplySource = function (sourceId) {
-    if (!BG.ready) init();
-    var items = BG.data.items.filter(function (i) { return i.id === sourceId || i.name === sourceId; });
-    if (!items.length) return null;
-    var entries = planFromConfig({ items: items });
-    if (!entries.length) return null;
-    var e = weightedPick(entries);
-    BG.data.settings.enabled = false;
-    clearTimeout(BG.timer);
-    return apply(e);
-  };
+  global.bgApplySource = function (sourceId, opts) { return applySource(sourceId, opts); };
   global.bgSources = function () {
     if (!BG.ready) init();
     return BG.data.items.map(function (i) {
@@ -511,6 +562,44 @@
   global.bgInit = init;
   // 图库等数据晚于本脚本加载时，重新计算候选池
   global.bgRebuild = function () { if (!BG.ready) return init(); rebuild(); return BG.plan.length; };
+
+  /*
+   * 背景自检：浏览器控制台执行 bgSelfTest()。
+   * 逐个来源试拉一张图，明确报告"能切 / 不能切 + 原因"，
+   * 用来区分"网络取不到图"和"切换逻辑没生效"。
+   */
+  global.bgSelfTest = function () {
+    if (!BG.ready) init();
+    var report = [];
+    var chain = Promise.resolve();
+    (BG.data.items || []).filter(function (i) { return i.enabled !== false; }).forEach(function (item) {
+      chain = chain.then(function () {
+        var entries = planFromConfig({ items: [item] });
+        if (!entries.length) {
+          report.push({ 来源: item.name, 类型: item.type, 结果: "无可用条目" + (item.type === "bing" ? "（必应接口没取到）" : "") });
+          return;
+        }
+        var e = entries[Math.floor(Math.random() * entries.length)];
+        if (e.kind === "css" || e.kind === "video") {
+          report.push({ 来源: item.name, 类型: item.type, 结果: "可用（无需网络）", 示例: String(e.css || e.url || "").slice(0, 48) });
+          return;
+        }
+        var u = url(e);
+        return preload(u).then(function (ok) {
+          report.push({ 来源: item.name, 类型: item.type, 结果: ok ? "可加载" : "加载失败", 示例: String(u).slice(0, 64) });
+        });
+      });
+    });
+    return chain.then(function () {
+      var okCount = report.filter(function (r) { return /可加载|可用/.test(r.结果); }).length;
+      console.log("%c[背景自检] " + okCount + "/" + report.length + " 个来源可用", "color:#3a9;font-weight:bold");
+      if (console.table) console.table(report); else console.log(report);
+      console.log("当前背景：", BG.current && (BG.current.author + " - " + BG.current.name + " (" + BG.current.vol + ")"));
+      console.log("轮播：", BG.data.settings.enabled ? "开启 " + BG.data.settings.intervalSeconds + " 秒/张" : "已暂停");
+      console.log("候选池：", BG.plan.length, "条；图库数据：", (global.galleryFlated || []).length, "张");
+      return report;
+    });
+  };
 
   if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", init);
   else init();

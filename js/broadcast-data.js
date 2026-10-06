@@ -25,6 +25,16 @@ window.BROADCAST_CONFIG = {
     historyLimit: 120,           // 本地保留的播报记录条数
     chime: true,                 // 播报前的提示音
     chimeFile: "",               // 自定义提示音 URL（留空使用内置合成音）
+    /*
+     * 自定义播报音频（后台"自动播报"页可直接上传 mp3/wav/ogg）。
+     * 优先级：customAudio > chimeFile > 内置合成提示音。
+     * 上传后是一段 data:audio 内联数据，会写进 js/broadcast-data.js，
+     * 建议控制在 300KB 以内（约 10~20 秒）。
+     */
+    customAudio: "",
+    customAudioName: "",
+    customAudioVolume: 1,         // 自定义音频音量 0-1
+    customAudioBeforeVoice: true, // true：先放音频再朗读；false：只放音频不朗读
     pollSeconds: 15              // 在线广播源轮询间隔
   },
 

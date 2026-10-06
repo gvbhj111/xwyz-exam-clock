@@ -124,7 +124,6 @@ function makeEnv(opts) {
     addEventListener: (ev, fn) => { (doc._listeners[ev] = doc._listeners[ev] || []).push(fn); },
     removeEventListener: () => { },
     querySelector: () => null,
-    querySelectorAll: () => [],
     write() { },
     _listeners: {},
     _register: (id, tag) => {
@@ -157,12 +156,18 @@ function makeEnv(opts) {
     walk(self);
     return out;
   };
+  function hasClass(e, cls) {
+    if (!e) return false;
+    if (e.classList && typeof e.classList.contains === "function") return e.classList.contains(cls);
+    return (" " + (e.className || "") + " ").indexOf(" " + cls + " ") >= 0;
+  }
   function matchSel(e, sel) {
     // 支持 tag、.class、[attr]、[attr=value] 以及它们的组合
+    if (!e) return false;
     const m = /^([a-zA-Z][\w-]*)?(\.[\w-]+)?\[([\w-]+)(?:=["']?([^\]"']*)["']?)?\]$/.exec(sel);
     if (m) {
       if (m[1] && e.tagName !== m[1].toUpperCase()) return false;
-      if (m[2] && !e.classList.contains(m[2].slice(1))) return false;
+      if (m[2] && !hasClass(e, m[2].slice(1))) return false;
       if (m[4] === undefined) return e.getAttribute(m[3]) != null;
       return e.getAttribute(m[3]) === m[4];
     }
@@ -193,6 +198,11 @@ function makeEnv(opts) {
     if (/^a\[data-i\]$/.test(sel)) return live().filter(e => e.getAttribute("data-i") != null);
     if (/^button$/.test(sel)) return live().filter(e => e.tagName === "BUTTON");
     if (/input\[type=checkbox\]$/.test(sel)) return live().filter(e => e.tagName === "INPUT" && e.type === "checkbox" && e.checked);
+    const mTagAttr = /^([a-zA-Z][\w-]*)\[([\w-]+)(?:=["']?([^\]"']*)["']?)?\]$/.exec(sel);
+    if (mTagAttr) {
+      return live().filter(e => e.tagName === mTagAttr[1].toUpperCase() &&
+        (mTagAttr[3] === undefined ? e.getAttribute(mTagAttr[2]) != null : e.getAttribute(mTagAttr[2]) === mTagAttr[3]));
+    }
     const mAttr = /\[([\w-]+)(?:=["']?([^\]"']*)["']?)?\]/.exec(sel);
     if (mAttr) return live().filter(e => e.getAttribute(mAttr[1]) === (mAttr[2] === undefined ? "" : mAttr[2]));
     return [];
@@ -235,7 +245,6 @@ function makeEnv(opts) {
     const t = doc._register(id);
     const tb = new El("tbody");
     t.querySelector = (sel) => (sel === "tbody" ? tb : null);
-    t.querySelectorAll = () => [];
     t.__tb = tb;
     t.appendChild(tb);
     doc.body.appendChild(t);
@@ -282,6 +291,29 @@ function makeEnv(opts) {
           catch (e) { this.onerror && this.onerror(e); }
         }, 1);
       }
+      readAsDataURL(file) {
+        setTimeout(() => {
+          try { this.onload && this.onload({ target: { result: file.__dataUrl || "data:audio/mpeg;base64,AAAA" } }); }
+          catch (e) { this.onerror && this.onerror(e); }
+        }, 1);
+      }
+    },
+    /* <audio> 桩：记录播放调用，便于断言自定义音频是否被触发 */
+    Audio: class {
+      constructor(src) {
+        this.src = src || "";
+        this.volume = 1;
+        this.muted = false;
+        this.currentTime = 0;
+        this.onended = null;
+        this.onerror = null;
+        this.played = 0;
+        if (!sandbox.__audioPlays) sandbox.__audioPlays = [];
+        sandbox.__audioPlays.push(this);
+      }
+      play() { this.played++; return Promise.resolve(); }
+      pause() { }
+      load() { }
     },
     fetch: opts.fetch || (() => Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve(null), text: () => Promise.resolve("") })),
     Image: class {
@@ -333,9 +365,11 @@ function makeEnv(opts) {
   return { doc, sandbox, ctx, errors, timers, store, El, root: opts.root || process.cwd() };
 }
 
-/* 把多个脚本拼成一包加载（模拟浏览器共享全局作用域），最后触发 DOMContentLoaded */
-function loadFiles(env, list, rootDir) {
-  const root = rootDir || path.join(__dirname, "..");
+/* 把多个脚本拼成一包加载（模拟浏览器共享全局作用域）
+ * opts.waitForDCL = true 时不自动触发 DOMContentLoaded，交由调用方决定时机 */
+function loadFiles(env, list, opts) {
+  const options = typeof opts === "string" ? { root: opts } : (opts || {});
+  const root = options.root || path.join(__dirname, "..");
   const code = list.map(f => "\n/*=== " + f + " ===*/\n" + fs.readFileSync(path.join(root, f), "utf8")).join("\n");
   try {
     vm.runInContext(code, env.ctx, { filename: "bundle" });
@@ -345,6 +379,7 @@ function loadFiles(env, list, rootDir) {
   }
   // 模拟解析完成后触发 DOMContentLoaded
   env.doc.readyState = "complete";
+  if (options.waitForDCL) return { ok: true, pendingDCL: true };
   try {
     vm.runInContext("if (typeof document!=='undefined' && document.dispatchEvent) document.dispatchEvent('DOMContentLoaded');", env.ctx);
     env.doc.dispatch("DOMContentLoaded");

@@ -160,12 +160,22 @@
     });
   }
 
+  /* 读取本地文件为 dataURL（用于把音频内联进配置） */
+  function readFileAsDataURL(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(String(r.result || "")); };
+      r.onerror = function () { reject(new Error("读取失败")); };
+      r.readAsDataURL(file);
+    });
+  }
+
   global.AdminUtil = {
     C: C, $: $, $$: $$, el: el, esc: esc, deepCopy: deepCopy, merge: merge,
     download: download, diffDays: diffDays, timeStr: timeStr, pad: pad, toast: toast,
     modal: modal, confirm: confirmBox,
     lsGet: lsGet, lsSet: lsSet,
     b64: b64, unb64: unb64, encryptToken: encryptToken, decryptToken: decryptToken,
-    readFile: readFile
+    readFile: readFile, readFileAsDataURL: readFileAsDataURL
   };
 })(window);
