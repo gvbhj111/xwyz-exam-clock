@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-06T02:05:31.808Z",
+  "updated": "2026-10-06T02:06:36.049Z",
   "messages": [
     {
       "id": "bc-muw19t87",
@@ -22,6 +22,19 @@
       "level": "notice",
       "text": "距离考试结束还有 15 分钟，请注意把握答题时间。",
       "voice": "距离考试结束还有 15 分钟，请注意把握答题时间。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muw1ebqc",
+      "at": "2026-10-06T02:05:45.828Z",
+      "until": "",
+      "level": "notice",
+      "text": "因临时安排调整，本场考试时间变更为 XX:XX—XX:XX，请以广播为准。",
+      "voice": "因临时安排调整，本场考试时间变更为 XX:XX—XX:XX，请以广播为准。",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
