@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-06T02:02:39.045Z",
+  "updated": "2026-10-06T02:05:31.808Z",
   "messages": [
     {
       "id": "bc-muw19t87",
@@ -9,6 +9,19 @@
       "level": "notice",
       "text": "考试期间请保持考场安静，手机等电子设备一律关机并放到指定位置。",
       "voice": "考试期间请保持考场安静，手机等电子设备一律关机并放到指定位置。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muw1aj4v",
+      "at": "2026-10-06T02:02:48.799Z",
+      "until": "",
+      "level": "notice",
+      "text": "距离考试结束还有 15 分钟，请注意把握答题时间。",
+      "voice": "距离考试结束还有 15 分钟，请注意把握答题时间。",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
