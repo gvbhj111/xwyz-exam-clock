@@ -1,6 +1,6 @@
 /*
  * 背景数据源配置（Background Data）
- * 由考试时钟管理控制台生成 · 2026/10/6 10:36:36
+ * 由考试时钟管理控制台生成 · 2026/10/6 10:40:55
  * 后台可视化编辑生成，可直接手工修改。
  */
 window.BG_DATA = {
@@ -76,20 +76,6 @@ window.BG_DATA = {
       ]
     },
     {
-      "id": "pub-picui",
-      "type": "static",
-      "name": "公共图床（picui）",
-      "weight": 3,
-      "list": [
-        {
-          "author": "picui",
-          "name": "启动图 B",
-          "url": "https://free.picui.cn/free/2026/07/07/6a4cb8a8e338f.png"
-        }
-      ],
-      "enabled": true
-    },
-    {
       "id": "picsum",
       "type": "online",
       "name": "Picsum 随机摄影",
@@ -116,38 +102,6 @@ window.BG_DATA = {
       "suffix": "",
       "author": "LoremFlickr",
       "license": "CC",
-      "enabled": true
-    },
-    {
-      "id": "bing",
-      "type": "bing",
-      "name": "必应每日壁纸",
-      "weight": 6,
-      "api": "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=zh-CN",
-      "base": "https://cn.bing.com",
-      "cacheMinutes": 180,
-      "fallback": [
-        {
-          "author": "Bing",
-          "name": "每日壁纸 A",
-          "url": "https://cn.bing.com/th?id=OHR.BlueCanyon_ZH-CN6846889594_1920x1080.jpg"
-        },
-        {
-          "author": "Bing",
-          "name": "每日壁纸 B",
-          "url": "https://cn.bing.com/th?id=OHR.GreatBarrierReef_ZH-CN4572073279_1920x1080.jpg"
-        },
-        {
-          "author": "Bing",
-          "name": "每日壁纸 C",
-          "url": "https://cn.bing.com/th?id=OHR.MontBlanc_ZH-CN9505161127_1920x1080.jpg"
-        },
-        {
-          "author": "Bing",
-          "name": "每日壁纸 D",
-          "url": "https://cn.bing.com/th?id=OHR.SnowyHills_ZH-CN5560284453_1920x1080.jpg"
-        }
-      ],
       "enabled": true
     },
     {
@@ -209,21 +163,6 @@ window.BG_DATA = {
           "author": "主题",
           "name": "夜空蓝",
           "css": "#101a33"
-        }
-      ],
-      "enabled": true
-    },
-    {
-      "id": "video",
-      "type": "video",
-      "name": "动态视频",
-      "weight": 2,
-      "list": [
-        {
-          "author": "Google",
-          "name": "云海延时",
-          "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-          "poster": ""
         }
       ],
       "enabled": true
