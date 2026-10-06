@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-06T02:06:36.049Z",
+  "updated": "2026-10-06T02:08:14.480Z",
   "messages": [
     {
       "id": "bc-muw19t87",
@@ -35,6 +35,19 @@
       "level": "notice",
       "text": "因临时安排调整，本场考试时间变更为 XX:XX—XX:XX，请以广播为准。",
       "voice": "因临时安排调整，本场考试时间变更为 XX:XX—XX:XX，请以广播为准。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muw1fhol",
+      "at": "2026-10-06T02:06:40.197Z",
+      "until": "",
+      "level": "notice",
+      "text": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
+      "voice": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
