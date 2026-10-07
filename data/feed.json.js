@@ -1,6 +1,11 @@
-{
+/*
+ * 广播数据（Exam Broadcast Feed）
+ * 由考试时钟管理控制台生成 · 2026/10/7 11:13:18
+ * 由管理控制台生成，勿手工改 id。
+ */
+window.BROADCAST_DATA = {
   "version": "1.0.0",
-  "updated": "2026-10-07T03:12:09.135Z",
+  "updated": "2026-10-07T03:13:18.214Z",
   "messages": [
     {
       "id": "bc-muw19t87",
@@ -55,4 +60,4 @@
       "_remote": false
     }
   ]
-}
+};
