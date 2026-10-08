@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-07T03:13:19.735Z",
+  "updated": "2026-10-08T05:35:59.610Z",
   "messages": [
     {
       "id": "bc-muw19t87",
@@ -48,6 +48,58 @@
       "level": "notice",
       "text": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
       "voice": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muxjvc8e",
+      "at": "2026-10-07T03:30:38.894Z",
+      "until": "",
+      "level": "notice",
+      "text": "测试",
+      "voice": "测试",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muxr0amo",
+      "at": "2026-10-07T06:50:27.408Z",
+      "until": "",
+      "level": "notice",
+      "text": "考试期间请保持考场安静，手机等电子设备一律关机并放到指定位置。",
+      "voice": "考试期间请保持考场安静，手机等电子设备一律关机并放到指定位置。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muxr0pm4",
+      "at": "2026-10-07T06:50:46.828Z",
+      "until": "",
+      "level": "notice",
+      "text": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
+      "voice": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-muyxfik2",
+      "at": "2026-10-08T02:38:01.394Z",
+      "until": "",
+      "level": "notice",
+      "text": "测试",
+      "voice": "测试",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
