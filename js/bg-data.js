@@ -1,18 +1,18 @@
 /*
  * 背景数据源配置（Background Data）
- * 由考试时钟管理控制台生成 · 2026/10/7 11:13:13
+ * 由考试时钟管理控制台生成 · 2026/10/11 20:00:10
  * 后台可视化编辑生成，可直接手工修改。
  */
 window.BG_DATA = {
   "settings": {
     "enabled": true,
-    "intervalSeconds": 120,
+    "intervalSeconds": 1800,
     "order": "random",
     "transition": "fade",
     "transitionMs": 1200,
     "kenBurns": true,
     "effect": "none",
-    "darken": 50,
+    "darken": 60,
     "focus": "center center",
     "showCaption": true,
     "pauseWhileHidden": true,
@@ -119,38 +119,6 @@ window.BG_DATA = {
       "enabled": true
     },
     {
-      "id": "bing",
-      "type": "bing",
-      "name": "必应每日壁纸",
-      "weight": 6,
-      "api": "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=zh-CN",
-      "base": "https://cn.bing.com",
-      "cacheMinutes": 180,
-      "fallback": [
-        {
-          "author": "Bing",
-          "name": "每日壁纸 A",
-          "url": "https://cn.bing.com/th?id=OHR.BlueCanyon_ZH-CN6846889594_1920x1080.jpg"
-        },
-        {
-          "author": "Bing",
-          "name": "每日壁纸 B",
-          "url": "https://cn.bing.com/th?id=OHR.GreatBarrierReef_ZH-CN4572073279_1920x1080.jpg"
-        },
-        {
-          "author": "Bing",
-          "name": "每日壁纸 C",
-          "url": "https://cn.bing.com/th?id=OHR.MontBlanc_ZH-CN9505161127_1920x1080.jpg"
-        },
-        {
-          "author": "Bing",
-          "name": "每日壁纸 D",
-          "url": "https://cn.bing.com/th?id=OHR.SnowyHills_ZH-CN5560284453_1920x1080.jpg"
-        }
-      ],
-      "enabled": true
-    },
-    {
       "id": "gradient",
       "type": "gradient",
       "name": "内置渐变",
@@ -214,21 +182,6 @@ window.BG_DATA = {
       "enabled": true
     },
     {
-      "id": "video",
-      "type": "video",
-      "name": "动态视频",
-      "weight": 2,
-      "list": [
-        {
-          "author": "Google",
-          "name": "云海延时",
-          "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-          "poster": ""
-        }
-      ],
-      "enabled": true
-    },
-    {
       "id": "local-repo",
       "type": "local",
       "name": "仓库图片（./images/）",
@@ -245,5 +198,5 @@ window.BG_DATA = {
       "enabled": true
     }
   ],
-  "updated": "2026-10-07"
+  "updated": "2026-10-11"
 };
