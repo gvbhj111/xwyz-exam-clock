@@ -1,18 +1,18 @@
 /*
  * 背景数据源配置（Background Data）
- * 由考试时钟管理控制台生成 · 2026/10/11 20:00:10
+ * 由考试时钟管理控制台生成 · 2026/10/18 17:13:56
  * 后台可视化编辑生成，可直接手工修改。
  */
 window.BG_DATA = {
   "settings": {
     "enabled": true,
-    "intervalSeconds": 1800,
+    "intervalSeconds": 1200,
     "order": "random",
     "transition": "fade",
     "transitionMs": 1200,
     "kenBurns": true,
     "effect": "none",
-    "darken": 60,
+    "darken": 40,
     "focus": "center center",
     "showCaption": true,
     "pauseWhileHidden": true,
@@ -198,5 +198,5 @@ window.BG_DATA = {
       "enabled": true
     }
   ],
-  "updated": "2026-10-11"
+  "updated": "2026-10-18"
 };
