@@ -59,7 +59,7 @@ exams[25] = {
 
 exams[251] = {
   type: "高三·物理",
-  author: "来源:年级组",
+  author: "来源：年级组",
   origin: "高三年级部",
   rollSlogan: ["宣威一中2026年高三上学期第二次月考：请以实际铃声为准。"],
   voiceReminder: true,
