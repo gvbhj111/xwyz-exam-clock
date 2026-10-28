@@ -1,6 +1,6 @@
 /*
  * 考试广播配置（Broadcast Rules）
- * 由考试时钟管理控制台生成 · 2026/10/7 11:13:16
+ * 由考试时钟管理控制台生成 · 2026/10/29 07:10:28
  * 后台可视化编辑生成，可直接手工修改。
  */
 window.BROADCAST_CONFIG = {
@@ -42,24 +42,14 @@ window.BROADCAST_CONFIG = {
       "2022-05-14"
     ],
     "beforeStart": [
-      30,
-      15,
-      5
+      20
     ],
-    "afterStart": [
-      15,
-      30
-    ],
-    "beforeEnd": [
-      30,
-      15,
-      5,
-      1
-    ],
-    "afterEnd": true,
+    "afterStart": [],
+    "beforeEnd": [],
+    "afterEnd": false,
     "templates": {
-      "beforeStart": "距离{subject}开考还有{minutes}分钟，请考生尽快入场，按座位号就座。",
-      "start": "{subject}考试现在开始，请考生认真审题、规范作答。",
+      "beforeStart": "距离{subject}开考还有{minutes}分钟，请考生按座位号就座。",
+      "start": "{subject}考试现在开始",
       "afterStart": "{subject}考试已经开始{minutes}分钟，请注意把握答题节奏。",
       "beforeEnd": "距离{subject}考试结束还有{minutes}分钟，请检查答题卡、姓名与考号。",
       "end": "{subject}考试结束，请考生立即停止作答，将答题卡放在桌面，等待监考老师收卷。"
@@ -71,8 +61,8 @@ window.BROADCAST_CONFIG = {
       0,
       30
     ],
-    "template": "现在时间是{time}。",
-    "onlyDuringExam": true
+    "onlyDuringExam": true,
+    "template": "现在时间是{time}。"
   },
   "discipline": {
     "enabled": false,
