@@ -60,7 +60,7 @@ exams[25] = {
 exams[251] = {
   type: "高三·物理",
   author: "来源:年级组",
-  origin: "高三年级部"
+  origin: "高三年级部",
   rollSlogan: ["宣威一中2026年高三上学期第二次月考：请以实际铃声为准。"],
   voiceReminder: true,
    schedule() {
@@ -77,7 +77,7 @@ exams[253] = {
   type: "高三·历史",
   author: "来源：年级组",
   origin: "高三年级部",
-  rollSlogan: ["宣威一中2026年高三上学期第一次月考：请以实际铃声为准。"],
+  rollSlogan: ["宣威一中2026年高三上学期第二次月考：请以实际铃声为准。"],
   voiceReminder: true,
  schedule() {
     $("语文", "2026-09-22", "14:30", "17:00");
