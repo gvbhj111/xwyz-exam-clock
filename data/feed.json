@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-29T05:42:06.355Z",
+  "updated": "2026-10-29T05:43:22.927Z",
   "messages": [
     {
       "id": "bc-muw19t87",
@@ -48,6 +48,19 @@
       "level": "notice",
       "text": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
       "voice": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-mvt4ankm",
+      "at": "2026-10-29T05:43:17.206Z",
+      "until": "",
+      "level": "notice",
+      "text": "测试测试",
+      "voice": "测试测试",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
