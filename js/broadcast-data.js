@@ -1,6 +1,6 @@
 /*
  * 考试广播配置（Broadcast Rules）
- * 由考试时钟管理控制台生成 · 2026/10/29 13:41:36
+ * 由考试时钟管理控制台生成 · 2026/10/29 14:12:43
  * 后台可视化编辑生成，可直接手工修改。
  */
 window.BROADCAST_CONFIG = {
@@ -11,7 +11,7 @@ window.BROADCAST_CONFIG = {
     "rate": 1,
     "pitch": 1,
     "volume": 1,
-    "voiceName": "",
+    "voiceName": "Microsoft 晓晓 Online (Natural) - Chinese (Mandarin, Simplified)",
     "lang": "zh-CN",
     "minGapSeconds": 6,
     "repeatGapSeconds": 20,
