@@ -1,11 +1,11 @@
 /*
  * 广播数据（Exam Broadcast Feed）
- * 由考试时钟管理控制台生成 · 2026/10/7 11:13:18
+ * 由考试时钟管理控制台生成 · 2026/10/29 14:12:48
  * 由管理控制台生成，勿手工改 id。
  */
 window.BROADCAST_DATA = {
   "version": "1.0.0",
-  "updated": "2026-10-07T03:13:18.214Z",
+  "updated": "2026-10-29T06:12:48.961Z",
   "messages": [
     {
       "id": "bc-muw19t87",
@@ -53,6 +53,19 @@ window.BROADCAST_DATA = {
       "level": "notice",
       "text": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
       "voice": "因听力设备故障，本场英语听力考试顺延，具体时间另行通知。",
+      "announce": "",
+      "pin": false,
+      "source": "管理控制台",
+      "repeatEveryMinutes": 0,
+      "_remote": false
+    },
+    {
+      "id": "bc-mvt4ankm",
+      "at": "2026-10-29T05:43:17.206Z",
+      "until": "",
+      "level": "notice",
+      "text": "测试测试",
+      "voice": "测试测试",
       "announce": "",
       "pin": false,
       "source": "管理控制台",
